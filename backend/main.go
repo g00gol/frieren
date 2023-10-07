@@ -2,16 +2,17 @@ package main
 
 import (
   "net/http"
-
+  "github.com/g00gol/frieren/backend/routes"
   "github.com/go-chi/chi/v5"
   "github.com/go-chi/chi/v5/middleware"
 )
 
 func main(){
-  r := chi.NewRouter()
+  port := "8080"
+  
   r.Use(middleware.Logger)
-  r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("welcome"))
-	})
-	http.ListenAndServe(":3000", r)
+
+  r := chi.NewRouter()
+
+	http.ListenAndServe(":" + port, r)
 }
