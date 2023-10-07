@@ -12,13 +12,13 @@ import (
 
 func GetRepos(w http.ResponseWriter, r *http.Request) {
 	repos := db.GetRepos()
-	var result bson.M
-	repos.FindOne(context.TODO(), bson.D{}).Decode(&result)
-	log.Println(result)
-	jsonData, err := json.MarshalIndent(result, "", "    ")
+	var data bson.M
+	repos.FindOne(context.TODO(), bson.D{}).Decode(&data)
+
+	// Return data as JSON
+	w.Header().Set("Content-Type", "application/json")
+	err := json.NewEncoder(w).Encode(data)
 	if err != nil {
 		log.Println(err)
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonData)
 }
