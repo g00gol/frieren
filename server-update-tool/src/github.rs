@@ -1,8 +1,10 @@
 use std::error::Error;
 use url::Url;
 use reqwest;
-use serde::{Serialize, Deserialize};
 use reqwest::header::USER_AGENT;
+use std::collections::HashMap;
+use serde::{Serialize, Deserialize};
+use serde_json;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Links {
@@ -77,16 +79,20 @@ pub async fn get_fern_file(remote_uri: &String, branch_name: Option<&String>) ->
     return Ok(file); 
 }
 
-pub async fn get_last_activity(remote_url: &String) -> Result<(), Box<dyn Error>>{
+pub async fn update_last_activity(remote_url: &String) -> Result<(), Box<dyn Error>>{
     let repo_owner = get_repo_owner_from_url(remote_url)?;
     let repo_name = get_repo_name_from_url(remote_url)?;
 
+    let github_uri = format!("https://api.github.com/repos/{repo_owner}/{repo_name}/activity?per_page=1");
 
-    let body = reqwest::get(format!("https://api.github.com/repos/{repo_owner}/{repo_name}/activity?per_page=1"))
+    let json: serde_json::Value = reqwest::Client::new()
+        .get(github_uri)
+        .header(USER_AGENT, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36")
+        .send()
         .await?
-        .text()
+        .json()
         .await?;
-    println!("body = {:?}", body);
+    println!("{}", json);
 
     return Ok(());
 }

@@ -1420,6 +1420,7 @@ dependencies = [
  "mongodb",
  "reqwest",
  "serde",
+ "serde_json",
  "tokio",
  "url",
 ]
