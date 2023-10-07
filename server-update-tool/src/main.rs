@@ -9,9 +9,10 @@ async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
     let repo_origin = repo.repo_origin;
     github::update_last_activity(&repo_origin).await?;
     let file: GithubFile = match github::get_fern_file(&repo_origin, Some(&"cli".to_string())).await {
-        Result(_file) => _file,
+        Ok(_file) => _file,
         Err(_) => github::get_fern_file(&repo_origin, None).await?
     };
+    return Ok(());
 }
 
 #[tokio::main]
