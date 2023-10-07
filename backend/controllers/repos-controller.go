@@ -11,9 +11,9 @@ import (
 )
 
 func GetRepos(w http.ResponseWriter, r *http.Request) {
-	repos := db.GetRepos()
+	reposColl := db.GetRepos()
 	var data bson.M
-	repos.FindOne(context.TODO(), bson.D{}).Decode(&data)
+	reposColl.FindOne(context.TODO(), bson.D{}).Decode(&data)
 
 	// Return data as JSON
 	w.Header().Set("Content-Type", "application/json")
