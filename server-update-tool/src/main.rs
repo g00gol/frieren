@@ -3,11 +3,14 @@ mod github;
 
 use tokio;
 use std::error::Error;
+use github::GithubFile;
 
 async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
     let repo_origin = repo.repo_origin;
-    github::get_last_activity(&repo_origin).await?;
-    github::get_fern_file(&repo_origin, &"cli".to_string()).await?;
+    let file: GithubFile = match github::get_fern_file(&repo_origin, Some(&"cli".to_string())).await {
+        Ok(_file) => _file,
+        Err(_) => github::get_fern_file(&repo_origin, None).await?
+    };
     return Ok(());
 }
 

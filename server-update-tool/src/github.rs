@@ -2,6 +2,7 @@ use std::error::Error;
 use url::Url;
 use reqwest;
 use serde::{Serialize, Deserialize};
+use reqwest::header::USER_AGENT;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Links {
@@ -28,7 +29,6 @@ pub struct GithubFile {
     pub content: String,
     pub encoding: String,
 
-    #[serde(flatten)]
     pub _links: Links
 }
 
@@ -57,20 +57,23 @@ fn get_repo_name_from_url(remote_url: &String) -> Result<String, Box<dyn Error>>
     return Ok(path_segments[1].to_string());
 }
 
-pub async fn get_fern_file(remote_uri: &String, branch_name: &String) -> Result<GithubFile, Box<dyn Error>> {
+pub async fn get_fern_file(remote_uri: &String, branch_name: Option<&String>) -> Result<GithubFile, Box<dyn Error>> {
     let repo_owner = get_repo_owner_from_url(&remote_uri)?;
     let repo_name = get_repo_name_from_url(&remote_uri)?;
 
-    let github_uri = format!("https://api.github.com/repos/{}/{}/contents/open-source.fern?ref={}", repo_owner, repo_name, branch_name);
+    let github_uri = match branch_name {
+        Some(_branch) => format!("https://api.github.com/repos/{}/{}/contents/open-source.fern?ref={}", repo_owner, repo_name, _branch),
+        None => format!("https://api.github.com/repos/{}/{}/contents/open-source.fern", repo_owner, repo_name)
+    };
 
     let file: GithubFile = reqwest::Client::new()
         .get(github_uri)
+        .header(USER_AGENT, "Frieren API")
         .send()
         .await?
         .json()
         .await?;
 
-    println!("{:?}", file);
     return Ok(file); 
 }
 
