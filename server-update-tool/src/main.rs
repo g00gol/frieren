@@ -5,7 +5,9 @@ use tokio;
 use std::error::Error;
 
 async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
-    github::check_remote(repo.repo_origin).await?;
+    let repo_origin = repo.repo_origin;
+    github::check_remote(&repo_origin).await?;
+    github::get_last_activity(&repo_origin).await?;
 
     return Ok(());
 }
