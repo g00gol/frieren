@@ -24,3 +24,7 @@ func Disconnect() error {
 func GetClient() *mongo.Client {
 	return client
 }
+
+func GetCollection(name string) *mongo.Collection {
+	return client.Database("frieren").Collection(name)
+}
