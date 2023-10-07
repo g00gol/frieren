@@ -36,5 +36,5 @@ func GetClient() *mongo.Client {
 }
 
 func GetCollection(name string) *mongo.Collection {
-	return client.Database("frieren").Collection(name)
+	return client.Database("Flamme").Collection(name)
 }
