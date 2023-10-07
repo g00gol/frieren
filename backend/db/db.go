@@ -17,10 +17,10 @@ func Connect() error {
 	return err
 }
 
-func GetClient() *mongo.Client {
-	return client
-}
-
 func Disconnect() error {
 	return client.Disconnect(context.Background())
+}
+
+func GetClient() *mongo.Client {
+	return client
 }
