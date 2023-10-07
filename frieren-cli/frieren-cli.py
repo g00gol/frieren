@@ -20,7 +20,7 @@ if __name__ == "__main__":
         if not 0 < difficulty < 6:
             raise ValueError()
     except ValueError as e:
-        print("Error: difficulty should be a number from 1-5")
+        raise ValueError("Error: difficulty should be a number from 1-5")
     
     desc = input("Enter a brief description of your project: ")
 
