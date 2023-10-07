@@ -1,10 +1,9 @@
 package routes
 
 import (
-  "net/http"
-  "github.com/g00gol/frieren/backend/routes/repos"
+	"github.com/go-chi/chi/v5"
 )
 
-func RegisterRoutes(r chi.Router) {
-  
+func RegisterRoutes(r *chi.Mux) {
+	ReposRoute(r)
 }
