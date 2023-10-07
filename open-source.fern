@@ -1,0 +1,14 @@
+description: Open source project tagging, aggregation for easier
+difficulty: 3
+name: g00gol/frieren
+recommended_issue_labels:
+- Good First Issue
+- Easy
+- 1-2 hrs
+technologies:
+- Go
+- MongoDB
+- Rust
+- Python
+- NextJS
+- JS
