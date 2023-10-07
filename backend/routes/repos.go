@@ -8,6 +8,6 @@ import (
 
 func ReposRoute(r *chi.Mux) {
 	r.Route("/repos", func(r chi.Router) {
-		r.Post("/", controllers.GetRepos)
+		r.Get("/", controllers.GetRepos)
 	})
 }
