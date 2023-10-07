@@ -6,8 +6,8 @@ use std::error::Error;
 
 async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
     let repo_origin = repo.repo_origin;
-    github::get_last_activity(&repo_origin).await?;
-    github::get_fern_file(&repo_origin, &"cli".to_string()).await?;
+    github::update_last_activity(&repo_origin).await?;
+    // github::get_fern_file(&repo_origin, &"cli".to_string()).await?;
     return Ok(());
 }
 
