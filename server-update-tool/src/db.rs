@@ -1,25 +1,32 @@
+<<<<<<< HEAD
 use mongodb::{Client, Database, Cursor, Collection, options::{ClientOptions, ResolverConfig}, options::FindOneAndReplaceOptions, bson::oid::ObjectId};
 use bson::doc;
 use chrono::{DateTime, Utc};
+=======
+use mongodb::{Client, Database, Cursor, Collection, options::{ClientOptions, ResolverConfig}};
+use mongodb::bson::{DateTime, to_document};
+>>>>>>> refs/remotes/origin/server-update-tool
 use std::env;
 use std::error::Error;
 use serde::{Serialize, Deserialize};
+use bson::oid::ObjectId;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Repo {
     pub _id: ObjectId,
-    pub name: String,
-    pub description: String,
-    pub languages: Vec<String>,
-    pub technologies: Vec<String>,
-    pub difficulty: u32, // 1-5
-    pub recommended_issue_labels: Vec<String>,
+    pub name: Option<String>,
+    pub description: Option<String>,
+    pub languages: Option<Vec<String>>,
+    pub technologies: Option<Vec<String>>,
+    pub difficulty: Option<u32>, // 0-4
+    pub recommended_issue_labels: Option<Vec<String>>,
     #[serde(with = "bson::serde_helpers::chrono_datetime_as_bson_datetime")]
-    pub last_updated: DateTime<Utc>,
-    pub stars: u32,
-    pub recommended_issues_count: u32,
+    pub last_updated: Option<DateTime<Utc>>,
+    pub stars: Option<u32>,
+    pub recommended_issues_count: Option<u32>,
     pub repo_origin: String,
-    pub fern_branch: String
+    pub fern_branch: Option<String>,
+    pub hash: Option<String>
 }
 
 async fn get_mongo_client() -> Result<Client, Box<dyn Error>> {
@@ -47,8 +54,10 @@ async fn get_repos_collection() -> Result<Collection<Repo>, Box<dyn Error>> {
 pub async fn get_repos() -> Result<Cursor<Repo>, Box<dyn Error>> {
     let collection = get_repos_collection().await?;
     let cursor = collection.find(None, None).await?;
+    
     return Ok(cursor);
 }
+<<<<<<< HEAD
 
 pub async fn update_repo(id: &ObjectId, new_repo: &Repo) -> Result<(), Box<dyn Error>> {
     let col = get_repos_collection().await?;
@@ -61,3 +70,5 @@ pub async fn update_repo(id: &ObjectId, new_repo: &Repo) -> Result<(), Box<dyn E
     ).await?;
     return Ok(());
 }
+=======
+>>>>>>> refs/remotes/origin/server-update-tool

@@ -1,7 +1,7 @@
 use std::error::Error;
 use url::Url;
 use reqwest;
-use reqwest::header::USER_AGENT;
+use reqwest::header::{ACCEPT, USER_AGENT};
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 use serde_json;
@@ -9,6 +9,8 @@ use serde_json;
 use chrono::{DateTime};
 use mongodb::bson::oid::ObjectId;
 
+use md5;
+use crate::db;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Links {
@@ -102,4 +104,48 @@ pub async fn update_last_activity(remote_url: &String) -> Result<i64, Box<dyn Er
     let timestamp = DateTime::parse_from_rfc3339(timestamp_str)?;
 
     return Ok(timestamp.timestamp());
+}
+
+fn get_fern_hash_from_github(file: &GithubFile) -> String {
+    return format!("{:x}", md5::compute(&file.content));
+}
+
+pub async fn fern_file_job(file: &GithubFile, repo: &db::Repo) -> Result<(), Box<dyn Error>> {
+    let github_fern_file_hash = get_fern_hash_from_github(file);
+    return match is_fern_file_hash_equal(github_fern_file_hash, repo) {
+        true => Ok(()),
+        false => {
+            // TODO implement all fern file DB updates
+
+            return Ok(());
+        }
+    }
+}
+
+fn is_fern_file_hash_equal(hash: String, repo: &db::Repo) -> bool {
+    // TODO should make md5 compute a separate function and pass that in accordingly
+    return match &repo.hash {
+        Some(_hash) => _hash.to_string() == hash,
+        None => false
+    }
+}
+
+pub async fn get_star_count(remote_url: &String) -> Result<u64, Box<dyn Error>>{
+    let repo_owner = get_repo_owner_from_url(remote_url)?;
+    let repo_name = get_repo_name_from_url(remote_url)?;
+
+    let uri = format!("https://api.github.com/repos/{}/{}", repo_owner, repo_name);
+
+    let json_data: serde_json::Value = reqwest::Client::new()
+        .get(uri)
+        .header(ACCEPT, "application/vnd.github+json")
+        .header(USER_AGENT, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36")
+        .send()
+        .await?
+        .json()
+        .await?;
+    let star_count: u64 = json_data.get("subscribers_count").unwrap().as_u64().unwrap();
+    println!("star count = {}", star_count);
+    
+    return Ok(star_count);
 }

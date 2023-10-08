@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 mongodb = "2.7"
 bson = { version = "2.7.0", features=["chrono-0_4"]}
+md5 = "0.7"
 tokio = "1.32"
 chrono = "0.4"
 serde = "1"

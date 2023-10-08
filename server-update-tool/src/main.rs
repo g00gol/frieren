@@ -16,6 +16,13 @@ async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
         Ok(_file) => _file,
         Err(_) => github::get_fern_file(&repo_origin, None).await?
     };
+
+    github::fern_file_job(&file, &repo);
+
+    github::update_last_activity(&repo_origin).await?;
+
+    github::get_star_count(&repo_origin).await?;
+
     return Ok(());
 }
 
