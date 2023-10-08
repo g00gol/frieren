@@ -1,7 +1,17 @@
-import "./globals.css";
-import { Inter } from "next/font/google";
+import { Playfair_Display, Quicksand } from "next/font/google";
 
-const inter = Inter({ subsets: ["latin"] });
+import "./globals.css";
+
+const playfairDisplay = Playfair_Display({
+  subsets: ["latin-ext"],
+  weight: "700",
+  variable: "--font-playfair-display",
+});
+const quicksand = Quicksand({
+  subsets: ["latin-ext"],
+  weight: "400",
+  variable: "--font-quicksand",
+});
 
 export const metadata = {
   title: "Create Next App",
@@ -11,7 +21,11 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body
+        className={`${playfairDisplay.className} bg-night-blue text-mage-silver`}
+      >
+        {children}
+      </body>
     </html>
   );
 }
