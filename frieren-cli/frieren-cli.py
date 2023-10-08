@@ -32,7 +32,10 @@ if __name__ == "__main__":
 
         fern = {"name": re.search(r"/([^/]*/[^/]*)$","https://github.com/g00gol/frieren").group(1), "technologies": technologies, "difficulty": difficulty, "description": desc, "recommended_issue_labels": recommended_issue_labels}
 
-        fern['repo_origin'] = origin
+    fern['repo_origin'] = origin
+    fern['fern_branch'] = repo.active_branch.name
+
+    print(fern)
 
     # Make api call
     r = requests.post("http://127.0.0.1:8080/repos", json=fern)
@@ -41,4 +44,5 @@ if __name__ == "__main__":
     else:
         with open("open-source.fern", "w+") as f:
             del fern['repo_origin']
+            del fern['fern_branch']
             json.dump(fern, f)
