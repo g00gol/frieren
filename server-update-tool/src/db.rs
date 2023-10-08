@@ -1,11 +1,6 @@
-<<<<<<< HEAD
 use mongodb::{Client, Database, Cursor, Collection, options::{ClientOptions, ResolverConfig}, options::FindOneAndReplaceOptions, bson::oid::ObjectId};
 use bson::doc;
 use chrono::{DateTime, Utc};
-=======
-use mongodb::{Client, Database, Cursor, Collection, options::{ClientOptions, ResolverConfig}};
-use mongodb::bson::{DateTime, to_document};
->>>>>>> refs/remotes/origin/server-update-tool
 use std::env;
 use std::error::Error;
 use serde::{Serialize, Deserialize};
@@ -57,7 +52,6 @@ pub async fn get_repos() -> Result<Cursor<Repo>, Box<dyn Error>> {
     
     return Ok(cursor);
 }
-<<<<<<< HEAD
 
 pub async fn update_repo(id: &ObjectId, new_repo: &Repo) -> Result<(), Box<dyn Error>> {
     let col = get_repos_collection().await?;
@@ -70,5 +64,3 @@ pub async fn update_repo(id: &ObjectId, new_repo: &Repo) -> Result<(), Box<dyn E
     ).await?;
     return Ok(());
 }
-=======
->>>>>>> refs/remotes/origin/server-update-tool
