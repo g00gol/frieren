@@ -16,6 +16,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/common-nighthawk/go-figure"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 )
 
 const (
@@ -27,6 +28,7 @@ type model struct {
 	root_dir  string
 	repo      *git.Repository
 	origin    string
+	branch    string
 	status    int
 	init_err  error
 	progress  progress.Model
@@ -69,6 +71,34 @@ func changeDir(repo *git.Repository) tea.Cmd {
 	}
 }
 
+func getBranchNameFromRepo(repo *git.Repository) (string, error) {
+	branchRefs, err := repo.Branches()
+	if err != nil {
+		return "", err
+	}
+
+	headRef, err := repo.Head()
+	if err != nil {
+		return "", err
+	}
+
+	var currentBranchName string
+	err = branchRefs.ForEach(func(branchRef *plumbing.Reference) error {
+		if branchRef.Hash() == headRef.Hash() {
+			currentBranchName = branchRef.Name().String()
+
+			return nil
+		}
+
+		return nil
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return currentBranchName, nil
+}
+
 func fetchOrigin(repo *git.Repository) tea.Cmd {
 	return func() tea.Msg {
 		sleep()
@@ -78,8 +108,12 @@ func fetchOrigin(repo *git.Repository) tea.Cmd {
 		}
 		url := origin.Config().URLs[0]
 		url = url[:len(url)-4]
+		branch, err := getBranchNameFromRepo(repo)
+		if err != nil {
+			return errMsg{err}
+		}
 
-		return originMsg{url}
+		return originMsg{url, branch}
 	}
 }
 
@@ -91,7 +125,10 @@ type dirMsg struct {
 	dir         string
 	fetchOrigin tea.Cmd
 }
-type originMsg struct{ origin string }
+type originMsg struct {
+	origin string
+	branch string
+}
 
 type errMsg struct{ err error }
 
@@ -102,6 +139,7 @@ type fernStruct struct {
 	description              string   `json:"description"`
 	recommended_issue_labels []string `json:"recommended_issue_labels"`
 	repo_origin              string   `json:"repo_origin,omitempty"`
+	fern_branch              string   `json:"fern_branch,omitempty"`
 }
 
 func checkForFern() tea.Msg {
@@ -126,20 +164,20 @@ type notFoundMsg struct{}
 func sendPOST(fern fernStruct) tea.Cmd {
 	fernJson, err := json.Marshal(&fern)
 	if err != nil {
-		log.Printf("[Error] %v\n", err)
+		log.Printf("[Marshal Error] %v\n", err)
 		return func() tea.Msg {
 			return postFailureMsg{}
 		}
 	}
 	return func() tea.Msg {
 		sleep()
-		request, error := http.NewRequest("POST", "http://127.0.0.1:8080/repos", bytes.NewBuffer(fernJson))
+		request, error := http.NewRequest("POST", "http://104.248.58.127/api/repos", bytes.NewBuffer(fernJson))
 		request.Header.Set("Content-Type", "application/json; charset=UTF-8")
 
 		client := &http.Client{}
 		response, error := client.Do(request)
 		if error != nil {
-			log.Printf("[Error] %v\n", err)
+			log.Printf("[POST Error] %v\n", err)
 			return postFailureMsg{}
 		}
 		defer response.Body.Close()
@@ -152,7 +190,7 @@ func sendPOST(fern fernStruct) tea.Cmd {
 
 			file, _ := os.OpenFile("open-source.fern", os.O_CREATE, os.ModePerm)
 			defer file.Close()
-			log.Printf("%#v\n", fern)
+			log.Printf("Fern> %v\n", fern)
 			json.NewEncoder(file).Encode(fern)
 			return postSuccessMsg{}
 		}
@@ -203,6 +241,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, checkForFern)
 		m.prog_msg += "\x1b[32m✓\x1b[39m" + "\nChecking for `open-source.fern` file... "
 		m.origin = msg.origin
+		m.branch = msg.branch
 	case notFoundMsg:
 		cmd = m.progress.IncrPercent(0.2)
 		cmds = append(cmds, cmd)
