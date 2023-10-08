@@ -85,7 +85,7 @@ pub async fn get_fern_file(remote_uri: &String, branch_name: Option<&String>) ->
     return Ok(file); 
 }
 
-pub async fn update_last_activity(remote_url: &String) -> Result<i64, Box<dyn Error>>{
+pub async fn get_last_activity(remote_url: &String) -> Result<i64, Box<dyn Error>>{
     let repo_owner = get_repo_owner_from_url(remote_url)?;
     let repo_name = get_repo_name_from_url(remote_url)?;
 
@@ -106,30 +106,25 @@ pub async fn update_last_activity(remote_url: &String) -> Result<i64, Box<dyn Er
     return Ok(timestamp.timestamp());
 }
 
-fn get_fern_hash_from_github(file: &GithubFile) -> String {
+pub fn get_fern_hash_from_github(file: &GithubFile) -> String {
     return format!("{:x}", md5::compute(&file.content));
 }
 
-pub async fn fern_file_job(file: &GithubFile, repo: &db::Repo) -> Result<(), Box<dyn Error>> {
-    let github_fern_file_hash = get_fern_hash_from_github(file);
-    return match is_fern_file_hash_equal(github_fern_file_hash, repo) {
-        true => Ok(()),
-        false => {
-            // TODO implement all fern file DB updates
-            repo.hash = Some(github_fern_file_hash);
-            // TODO actually read the fern file
+// pub async fn fern_file_job(file: &GithubFile, hash: &Option<String>) -> Result<Option<String>, Box<dyn Error>> {
+//     let github_fern_file_hash = get_fern_hash_from_github(file);
+//     return match is_fern_file_hash_equal(github_fern_file_hash, hash) {
+//         true => Ok(None),
+//         false => {
 
-            db::update_repo(repo); // TODO integrate this
+//             return Ok(Some(github_fern_file_hash.clone()));
+//         }
+//     }
+// }
 
-            return Ok(());
-        }
-    }
-}
-
-fn is_fern_file_hash_equal(hash: String, repo: &db::Repo) -> bool {
+pub fn is_fern_file_hash_equal(hash: &String, old_hash: &Option<String>) -> bool {
     // TODO should make md5 compute a separate function and pass that in accordingly
-    return match &repo.hash {
-        Some(_hash) => _hash.to_string() == hash,
+    return match old_hash {
+        Some(_hash) => _hash.to_string() == hash.to_string(),
         None => false
     }
 }

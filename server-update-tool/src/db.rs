@@ -4,7 +4,6 @@ use chrono::{DateTime, Utc};
 use std::env;
 use std::error::Error;
 use serde::{Serialize, Deserialize};
-use bson::oid::ObjectId;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Repo {
@@ -16,7 +15,7 @@ pub struct Repo {
     pub difficulty: Option<u32>, // 0-4
     pub recommended_issue_labels: Option<Vec<String>>,
     #[serde(with = "bson::serde_helpers::chrono_datetime_as_bson_datetime")]
-    pub last_updated: Option<DateTime<Utc>>,
+    pub last_updated: DateTime<Utc>,
     pub stars: Option<u32>,
     pub recommended_issues_count: Option<u32>,
     pub repo_origin: String,

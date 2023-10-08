@@ -10,7 +10,8 @@ use chrono::{DateTime, Utc};
 async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
     let ref repo_origin = repo.repo_origin;
     let ref repo_oid = repo._id;
-    let last_updated = github::update_last_activity(&repo_origin).await?;
+    let ref repo_hash = repo.hash;
+    let last_updated = github::get_last_activity(&repo_origin).await?;
     let dt: DateTime<Utc> = DateTime::<Utc>::from_timestamp(last_updated, 0).expect("invalid timestamp");
     
     let file: GithubFile = match github::get_fern_file(&repo_origin, Some(&"cli".to_string())).await {
@@ -18,9 +19,14 @@ async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
         Err(_) => github::get_fern_file(&repo_origin, None).await?
     };
 
-    github::fern_file_job(&file, &repo);
-
-    github::update_last_activity(&repo_origin).await?;
+    let new_hash = github::get_fern_hash_from_github(&file);
+    match github::is_fern_file_hash_equal(&new_hash, &repo_hash) {
+        true => {},
+        false => {
+            // code
+            println!("Code!");
+        }
+    }
 
     github::get_star_count(&repo_origin).await?;
 
