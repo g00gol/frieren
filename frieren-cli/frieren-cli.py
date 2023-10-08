@@ -38,7 +38,7 @@ if __name__ == "__main__":
     print(fern)
 
     # Make api call
-    r = requests.post("http://localhost:8080/repos", json=fern)
+    r = requests.post("http://104.248.58.127/api/repos", json=fern) # We put the hack in hackathon
     if not 200 <= r.status_code < 300:
         print("Error registering project")
     else:
