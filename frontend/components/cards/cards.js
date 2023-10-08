@@ -41,10 +41,10 @@ export default function Cards({ children }) {
   }, [searchTerm]);
 
   return (
-    <>
+    <div className="space-y-4">
       {data.map((project) => (
         <Card key={project.hash} project={project} />
       ))}
-    </>
+    </div>
   );
 }
