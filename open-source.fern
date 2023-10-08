@@ -1,1 +1,1 @@
-{"name": "g00gol/frieren", "technologies": ["MongoDB", "Rust", "Go", "Python", "JavaScript"], "difficulty": 3, "description": "Open source project finder", "recommended_issue_labels": ["easy", "start-here", "Good First Issue"]}
+{"name": "g00gol/frieren", "technologies": ["MongoDB"], "difficulty": 3, "description": "test", "recommended_issue_labels": ["good first issue"]}
