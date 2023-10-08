@@ -12,6 +12,7 @@ use md5;
 use crate::db;
 use futures::future::{BoxFuture, FutureExt};
 use std::{thread, time};
+use log::{debug};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Links {
@@ -70,6 +71,8 @@ async fn get_request_wrapper(url: &String) -> Result<Response, Box<dyn Error>> {
 
     let sleep_duration = time::Duration::from_millis(5000);
 
+    debug!("Attempting to make request to {}", url);
+
     for n in 1..3 { // we put the hack in hackathon
         let response = reqwest::Client::new()
             .get(url)
@@ -78,18 +81,23 @@ async fn get_request_wrapper(url: &String) -> Result<Response, Box<dyn Error>> {
         .await?;
         match response.status().as_u16() {
             403 => {
+                debug!("Rate limiter. Sleeping {}ms", sleep_duration.as_millis());
                 thread::sleep(sleep_duration);
             },
             200 => {  
+                debug!("Successfully made request to {}", url);
                 return Ok(response)
             } 
             _ => return Err("Error while querying URL".into())
         }
     }
+    debug!("Failed to request {url}. Too many requests");
+
     return Err("Rate limiter too strong".into()); // We put the hack in hackathon    
 }
 
 pub async fn get_fern_file(remote_uri: &String, branch_name: Option<&String>) -> Result<GithubFile, Box<dyn Error>> {
+    debug!("Getting fern file");
     let repo_owner = get_repo_owner_from_url(&remote_uri)?;
     let repo_name = get_repo_name_from_url(&remote_uri)?;
 
@@ -102,11 +110,13 @@ pub async fn get_fern_file(remote_uri: &String, branch_name: Option<&String>) ->
         .await?
         .json()
         .await?;
-    
+
+    debug!("Successfully got fern file"); 
     return Ok(file); 
 }
 
 pub async fn get_created_at_time(remote_url: &String) -> Result<i64, Box<dyn Error>> {
+    debug!("Getting created at time");
     let repo_owner = get_repo_owner_from_url(remote_url)?;
     let repo_name = get_repo_name_from_url(remote_url)?;
 
@@ -117,15 +127,17 @@ pub async fn get_created_at_time(remote_url: &String) -> Result<i64, Box<dyn Err
         .json()
         .await?;
 
-    let time_string = json[0]["created_at"].to_string();
+    let time_string = json["created_at"].to_string();
     let timestamp_str = time_string.trim_matches('"');
     let timestamp = DateTime::parse_from_rfc3339(timestamp_str)?;
 
+    debug!("Successfully got created at time");
     return Ok(timestamp.timestamp());
 
 }
 
 pub async fn get_last_activity(remote_url: &String) -> Result<i64, Box<dyn Error>>{
+    debug!("Getting last activity time");
     let repo_owner = get_repo_owner_from_url(remote_url)?;
     let repo_name = get_repo_name_from_url(remote_url)?;
 
@@ -140,6 +152,7 @@ pub async fn get_last_activity(remote_url: &String) -> Result<i64, Box<dyn Error
     let timestamp_str = time_string.trim_matches('"');
     let timestamp = DateTime::parse_from_rfc3339(timestamp_str)?;
 
+    debug!("Successfully got last activity time");
     return Ok(timestamp.timestamp());
 }
 
@@ -155,6 +168,7 @@ pub fn is_fern_file_hash_equal(hash: &String, old_hash: &Option<String>) -> bool
 }
 
 pub async fn get_star_count(remote_url: &String) -> Result<u64, Box<dyn Error>>{
+    debug!("Getting star count");
     let repo_owner = get_repo_owner_from_url(remote_url)?;
     let repo_name = get_repo_name_from_url(remote_url)?;
 
@@ -167,10 +181,12 @@ pub async fn get_star_count(remote_url: &String) -> Result<u64, Box<dyn Error>>{
     
     let star_count: u64 = json_data.get("subscribers_count").unwrap().as_u64().unwrap();
     
+    debug!("Successfully got star count");
     return Ok(star_count);
 }
 
 pub async fn get_languages(remote_url: &String) -> Result<Vec<String>, Box<dyn Error>>{
+    debug!("Getting languages");
     let repo_owner = get_repo_owner_from_url(remote_url)?;
     let repo_name = get_repo_name_from_url(remote_url)?;
 
@@ -184,11 +200,13 @@ pub async fn get_languages(remote_url: &String) -> Result<Vec<String>, Box<dyn E
     
     let lang_array: &serde_json::Map<String, serde_json::Value> = json_data.as_object().unwrap();
     let langs: Vec<String> = lang_array.keys().cloned().collect();
-    
+
+    debug!("Successfully got lanuages");
     return Ok(langs);
 }
 
 pub async fn count_recommended_issues(remote_url: &String, recommended_issue_labels: &Vec<String>) -> Result<usize, Box<dyn Error>> {
+    debug!("Getting recommended issues");
     let repo_owner = get_repo_owner_from_url(remote_url)?;
     let repo_name = get_repo_name_from_url(remote_url)?;
 
@@ -205,5 +223,7 @@ pub async fn count_recommended_issues(remote_url: &String, recommended_issue_lab
 
         ret+=json_data.len();
     }
+
+    debug!("Successfully got number of recommended issues");
     return Ok(ret);
 }

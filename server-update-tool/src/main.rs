@@ -7,12 +7,16 @@ use std::error::Error;
 use github::GithubFile;
 use chrono::{DateTime, Utc};
 use std::collections::hash_set::HashSet;
+use log::{debug};
+use env_logger;
 
 async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
     let ref repo_origin = repo.repo_origin;
     let ref repo_hash = repo.hash;
     
     let ref mut new_repo = repo.clone();
+
+    debug!("Starting to handle repo {}", repo.name.unwrap());
 
     let last_updated = github::get_last_activity(&repo_origin).await?;
     let dt_last_updated: DateTime<Utc> = DateTime::<Utc>::from_timestamp(last_updated, 0).expect("invalid timestamp");
@@ -55,11 +59,15 @@ async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
     new_repo.last_updated = dt_last_updated;
     new_repo.recommended_issues_count = Some(github::count_recommended_issues(&repo_origin, &new_repo.recommended_issue_labels.as_ref().unwrap()).await?);
 
+    db::update_repo(new_repo).await?;
+
     return Ok(());
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    env_logger::init();
+
     let mut cursor = db::get_repos().await?;
 
     while cursor.advance().await? {

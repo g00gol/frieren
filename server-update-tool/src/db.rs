@@ -4,6 +4,7 @@ use chrono::{DateTime, Utc};
 use std::env;
 use std::error::Error;
 use serde::{Serialize, Deserialize};
+use log::{debug};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Repo {
@@ -48,20 +49,24 @@ async fn get_repos_collection() -> Result<Collection<Repo>, Box<dyn Error>> {
 }
 
 pub async fn get_repos() -> Result<Cursor<Repo>, Box<dyn Error>> {
+    debug!("Attempting to query DB");
     let collection = get_repos_collection().await?;
     let cursor = collection.find(None, None).await?;
     
+    debug!("Successully queried DB");
     return Ok(cursor);
 }
 
-pub async fn update_repo(id: &ObjectId, new_repo: &Repo) -> Result<(), Box<dyn Error>> {
+pub async fn update_repo(new_repo: &Repo) -> Result<(), Box<dyn Error>> {
+    debug!("Attempting to update DB");
     let col = get_repos_collection().await?;
-    let update_result = col.find_one_and_replace(
+    col.find_one_and_replace(
         doc!{
-            "_id": id
+            "_id": new_repo._id
         },
         new_repo,
         FindOneAndReplaceOptions::builder().build()
     ).await?;
+    debug!("Successfully updated DB");
     return Ok(());
 }
