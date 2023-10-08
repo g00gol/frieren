@@ -9,18 +9,12 @@ use chrono::{DateTime, Utc};
 
 async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
     let ref repo_origin = repo.repo_origin;
-    let ref repo_oid = repo._id;
     let ref repo_hash = repo.hash;
-
-    let ref repo_name = repo.name;
-    let ref repo_description = repo.description;
     
     let ref mut new_repo = repo.clone();
 
-
-
     let last_updated = github::get_last_activity(&repo_origin).await?;
-    let dt: DateTime<Utc> = DateTime::<Utc>::from_timestamp(last_updated, 0).expect("invalid timestamp");
+    let dt_last_updated: DateTime<Utc> = DateTime::<Utc>::from_timestamp(last_updated, 0).expect("invalid timestamp");
     
     let file: GithubFile = match github::get_fern_file(&repo_origin, Some(&"cli".to_string())).await {
         Ok(_file) => _file,
@@ -32,15 +26,26 @@ async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
     match github::is_fern_file_hash_equal(&new_repo.hash.as_ref().unwrap(), &repo_hash) {
         true => {},
         false => {
-            let content = fern::read_b64_content(file.content.trim().to_string());
-            println!("{:?}", content);
-            // TODO check if name and description doesn't exist
+            let content = fern::read_b64_content(file.content.trim().to_string()).unwrap(); // we put the hack in hackathon
+            new_repo.name = Some(content.name);
+            new_repo.description = Some(content.description);
+            // TODO add technologies
+            // TODO query languages
+
+            // TODO date created. https://api.github.com/repos/g00gol/frienc
+            new_repo.technologies = Some(content.technologies);
+            new_repo.difficulty = Some(content.difficulty.into());
+            new_repo.recommended_issue_labels = Some(content.recommended_issue_labels);
+            // TODO recommended issue count
+
             // to_insert_hash = Some(new_hash);
             println!("Code!");
         }
     }
 
     let stars = github::get_star_count(&repo_origin).await?;
+    new_repo.stars = Some(stars);
+    new_repo.last_updated = dt_last_updated;
     github::get_languages(&repo_origin).await?;
 
     return Ok(());
