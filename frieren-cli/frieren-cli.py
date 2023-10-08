@@ -30,7 +30,7 @@ if __name__ == "__main__":
 
         recommended_issue_labels = list(set(map(lambda x: x.strip(), input("Input any tag/label that would be a good first issue separated by a comma (','):").split(","))))
 
-        fern = {"name": re.search(r"/([^/]*/[^/]*)$","https://github.com/g00gol/frieren").group(1), "technologies": technologies, "difficulty": difficulty, "description": desc, "recommended_issue_labels": recommended_issue_labels}
+        fern = {"name": re.search(r"/([^/]*/[^/]*)$",origin).group(1), "technologies": technologies, "difficulty": difficulty, "description": desc, "recommended_issue_labels": recommended_issue_labels}
 
     fern['repo_origin'] = origin
     fern['fern_branch'] = repo.active_branch.name
