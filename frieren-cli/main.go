@@ -139,7 +139,7 @@ func sendPOST(fern fernStruct) tea.Cmd {
 		client := &http.Client{}
 		response, error := client.Do(request)
 		if error != nil {
-			log.Printf("[Error] &v\n", err)
+			log.Printf("[Error] %v\n", err)
 			return postFailureMsg{}
 		}
 		defer response.Body.Close()
@@ -147,12 +147,11 @@ func sendPOST(fern fernStruct) tea.Cmd {
 		if response.StatusCode >= 200 && response.StatusCode < 300 {
 			// Dump json to .fern file
 			var fern fernStruct
-			file, _ := os.OpenFile("open-source.json", os.O_CREATE, os.ModePerm)
-			defer file.Close()
 			json.Unmarshal([]byte(fernJson), &fern)
 			fern.repo_origin = ""
 
 			log.Printf("%#v\n", fern)
+			_ := os.WriteFile("open-source.fern", fern, os.ModePerm)
 			return postSuccessMsg{}
 		}
 		log.Printf("[Error] Issue registering project (status code = %v)\n", response.StatusCode)
@@ -250,7 +249,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if msg.Type == tea.KeyUp {
 				for i, ti := range m.ti_arr {
 					if ti.Focused() {
-						log.Printf("up %v\n ", i)
 						if i != 0 {
 							m.ti_arr[i].Blur()
 							m.ti_arr[i-1].Focus()
@@ -275,7 +273,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if msg.Type == tea.KeyDown {
 				for i, ti := range m.ti_arr {
 					if ti.Focused() {
-						log.Printf("down %v\n ", i)
 						if i != len(m.ti_arr)-1 {
 							m.ti_arr[i].Blur()
 							m.ti_arr[i+1].Focus()
