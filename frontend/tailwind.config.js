@@ -29,5 +29,8 @@ module.exports = {
       "night-blue": "#05141A",
     },
   },
-  plugins: [],
+  daisyui: {
+    themes: [],
+  },
+  plugins: [require("daisyui")],
 };

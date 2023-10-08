@@ -2,11 +2,12 @@
 import React from "react";
 
 import Searchbar from "@/components/searchbar";
+import Cards from "@/components/cards/cards";
 
 export default function Home() {
   return (
-    <main className="">
-      <h2 className="">
+    <main>
+      <h2>
         celebrating open source projects. discover projects that interest you!
       </h2>
       <h3>
@@ -14,6 +15,8 @@ export default function Home() {
         collaboration, so you can focus on the projects you love
       </h3>
       <Searchbar />
+
+      <Cards />
     </main>
   );
 }

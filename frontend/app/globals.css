@@ -28,3 +28,9 @@ html, body {
     @apply text-sm;
   }
 }
+
+@layer components {
+  .tab-active {
+    @apply text-sky-blue;
+  }
+}
