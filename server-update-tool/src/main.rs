@@ -11,6 +11,7 @@ use log::{debug};
 use env_logger;
 
 async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
+    let ref repo__id = repo._id;
     let ref repo_origin = repo.repo_origin;
     let ref repo_hash = repo.hash;
     
@@ -28,7 +29,10 @@ async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
 
     let file: GithubFile = match github::get_fern_file(&repo_origin, Some(&"cli".to_string())).await {
         Ok(_file) => _file,
-        Err(_) => github::get_fern_file(&repo_origin, None).await? // TODO if this still fails, delete DB entry
+        Err(_) => {match github::get_fern_file(&repo_origin, None).await {
+            Ok(__file) => __file,
+            Err(e) => {db::delete_entry(repo__id).await?; return Err(e)},
+        }}// TODO if this still fails, delete DB entry
     };
 
     new_repo.hash = Some(github::get_fern_hash_from_github(&file));
