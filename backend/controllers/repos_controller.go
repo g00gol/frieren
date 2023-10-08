@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -34,8 +35,21 @@ func CreateRepo(w http.ResponseWriter, r *http.Request) {
 	// Decode the request body into repo
 	err := json.NewDecoder(r.Body).Decode(&repo)
 	if err != nil {
-		log.Println(err)
+		http.Error(w, "Error decoding request body", http.StatusBadRequest)
+		return
+	}
+
+	// If last_updated is null, set it to current time
+	if repo.LastUpdated.IsZero() {
+		repo.LastUpdated = utils.GetCurrentTime()
 	}
 
 	// Insert repo into database
+	_, err = db.GetCollection("repos").InsertOne(context.TODO(), repo)
+	if err != nil {
+		http.Error(w, "Error inserting into database", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
 }
