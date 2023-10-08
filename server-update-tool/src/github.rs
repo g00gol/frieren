@@ -5,6 +5,10 @@ use reqwest::header::USER_AGENT;
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 use serde_json;
+// use mongodb::bson::DateTime;
+use chrono::{DateTime};
+use mongodb::bson::oid::ObjectId;
+
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Links {
@@ -79,7 +83,7 @@ pub async fn get_fern_file(remote_uri: &String, branch_name: Option<&String>) ->
     return Ok(file); 
 }
 
-pub async fn update_last_activity(remote_url: &String) -> Result<(), Box<dyn Error>>{
+pub async fn update_last_activity(remote_url: &String) -> Result<i64, Box<dyn Error>>{
     let repo_owner = get_repo_owner_from_url(remote_url)?;
     let repo_name = get_repo_name_from_url(remote_url)?;
 
@@ -92,7 +96,10 @@ pub async fn update_last_activity(remote_url: &String) -> Result<(), Box<dyn Err
         .await?
         .json()
         .await?;
-    println!("{}", json);
 
-    return Ok(());
+    let time_string = json[0]["timestamp"].to_string();
+    let timestamp_str = time_string.trim_matches('"');
+    let timestamp = DateTime::parse_from_rfc3339(timestamp_str)?;
+
+    return Ok(timestamp.timestamp());
 }

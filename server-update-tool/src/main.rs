@@ -4,10 +4,14 @@ mod github;
 use tokio;
 use std::error::Error;
 use github::GithubFile;
+use chrono::{DateTime, Utc};
 
 async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
-    let repo_origin = repo.repo_origin;
-    github::update_last_activity(&repo_origin).await?;
+    let ref repo_origin = repo.repo_origin;
+    let ref repo_oid = repo._id;
+    let last_updated = github::update_last_activity(&repo_origin).await?;
+    let dt: DateTime<Utc> = DateTime::<Utc>::from_timestamp(last_updated, 0).expect("invalid timestamp");
+    
     let file: GithubFile = match github::get_fern_file(&repo_origin, Some(&"cli".to_string())).await {
         Ok(_file) => _file,
         Err(_) => github::get_fern_file(&repo_origin, None).await?
