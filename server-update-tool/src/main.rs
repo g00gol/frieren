@@ -11,6 +11,14 @@ async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
     let ref repo_origin = repo.repo_origin;
     let ref repo_oid = repo._id;
     let ref repo_hash = repo.hash;
+
+    let ref repo_name = repo.name;
+    let ref repo_description = repo.description;
+    
+    let ref mut new_repo = repo.clone();
+
+
+
     let last_updated = github::get_last_activity(&repo_origin).await?;
     let dt: DateTime<Utc> = DateTime::<Utc>::from_timestamp(last_updated, 0).expect("invalid timestamp");
     
@@ -19,11 +27,15 @@ async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
         Err(_) => github::get_fern_file(&repo_origin, None).await?
     };
 
-    let new_hash = github::get_fern_hash_from_github(&file);
-    match github::is_fern_file_hash_equal(&new_hash, &repo_hash) {
+    new_repo.hash = Some(github::get_fern_hash_from_github(&file));
+
+    match github::is_fern_file_hash_equal(&new_repo.hash.as_ref().unwrap(), &repo_hash) {
         true => {},
         false => {
-            // code
+            let content = fern::read_b64_content(file.content.trim().to_string());
+            println!("{:?}", content);
+            // TODO check if name and description doesn't exist
+            // to_insert_hash = Some(new_hash);
             println!("Code!");
         }
     }
