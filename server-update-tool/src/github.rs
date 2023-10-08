@@ -12,7 +12,8 @@ use md5;
 use crate::db;
 use futures::future::{BoxFuture, FutureExt};
 use std::{thread, time};
-use log::{debug};
+use log::debug;
+use more_asserts::assert_ge;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Links {
@@ -51,7 +52,7 @@ fn get_path_segments_from_url(remote_url: &str) -> Result<Vec<String>, Box<dyn E
     };
 
     // https://github.com/{REPO_OWNER}/{REPO_NAME}
-    assert_eq!(2, path_segments.len()); // 3rd element is ""
+    assert_ge!(path_segments.len(), 2); 
 
     return Ok(path_segments); 
 
