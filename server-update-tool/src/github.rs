@@ -145,8 +145,7 @@ pub async fn get_languages(remote_url: &String) -> Result<Vec<String>, Box<dyn E
 
     // let json_data: serde_json::Value = reqwest::Client::new()
     let json_data: serde_json::Value = reqwest::Client::new()
-        //.get(uri)
-        .get("https://api.github.com/repos/mdt1026/HackTCNJ-arduino-fsr/languages")
+        .get(uri)
         .header(ACCEPT, "application/vnd.github+json")
         .header(USER_AGENT, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36")
         .send()
