@@ -1,5 +1,6 @@
 mod db;
 mod github;
+mod fern;
 
 use tokio;
 use std::error::Error;

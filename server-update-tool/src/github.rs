@@ -116,6 +116,10 @@ pub async fn fern_file_job(file: &GithubFile, repo: &db::Repo) -> Result<(), Box
         true => Ok(()),
         false => {
             // TODO implement all fern file DB updates
+            repo.hash = Some(github_fern_file_hash);
+            // TODO actually read the fern file
+
+            db::update_repo(repo); // TODO integrate this
 
             return Ok(());
         }
