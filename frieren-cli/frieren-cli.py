@@ -38,7 +38,7 @@ if __name__ == "__main__":
     print(fern)
 
     # Make api call
-    r = requests.post("http://127.0.0.1:8080/repos", json=fern)
+    r = requests.post("http://104.248.58.127/api/repos", json=fern)
     if not 200 <= r.status_code < 300:
         print("Error registering project")
     else:
