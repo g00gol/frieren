@@ -9,7 +9,6 @@ import (
 )
 
 func GetReposByFilters(filter any) ([]types.Repo, error) {
-	log.Println("Getting repos by filters", filter)
 	collection := GetCollection("repos")
 
 	// Specify options to use for string comparison

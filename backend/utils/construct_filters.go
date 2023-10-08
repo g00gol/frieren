@@ -16,11 +16,15 @@ func ConstructFilters(r *http.Request, model interface{}) bson.D {
 
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
-		param := strings.ToLower(field.Name)
+
+		bsonTag := field.Tag.Get("bson")
+		if bsonTag == "" {
+			continue
+		}
+		param := strings.Split(bsonTag, ",")[0]
 
 		if values, ok := r.URL.Query()[param]; ok && len(values) > 0 {
 			if field.Type.Kind() == reflect.Slice {
-				// Split the comma-delimited string into a slice of strings
 				elements := strings.Split(values[0], ",")
 				filter = append(filter, bson.E{Key: param, Value: bson.D{{Key: "$in", Value: elements}}})
 			} else {
