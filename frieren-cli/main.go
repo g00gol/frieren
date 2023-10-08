@@ -110,6 +110,7 @@ func fetchOrigin(repo *git.Repository) tea.Cmd {
 		}
 		url := origin.Config().URLs[0]
 		url = url[:len(url)-4]
+		// We put the hack in hackathon
 		if strings.HasPrefix(url, "git") {
 			url = "https://github.com/" + strings.Split(url, ":")[1]
 		}
@@ -313,16 +314,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				// TODO
 				// If valid, send POST
 				if m.not_found == true && m.ti_arr[len(m.ti_arr)-1].Focused() {
-					m.ti_arr[0].Blur()
 					m.fern.Technologies = strings.Split(m.ti_arr[0].Value(), ",")
-					m.ti_arr[1].Blur()
 					i, _ := strconv.Atoi(m.ti_arr[1].Value())
 					m.fern.Difficulty = i
-					m.ti_arr[2].Blur()
 					m.fern.Description = m.ti_arr[2].Value()
 					m.ti_arr[3].Blur()
 					m.fern.Recommended_issue_labels = strings.Split(m.ti_arr[3].Value(), ",")
-
+					// We put the hack in hackathon
 					m.fern.Name = strings.TrimPrefix(m.origin, "https://github.com/")
 					m.fern.Repo_origin = m.origin
 					cmds = append(cmds, sendPOST(m.fern))
