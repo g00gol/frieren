@@ -12,14 +12,14 @@ use env_logger;
 
 async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
     let ref repo__id = repo._id;
-    let ref repo_origin = repo.repo_origin;
     let ref repo_hash = repo.hash;
+    let ref repo_name = repo.name;
     
     let ref mut new_repo = repo.clone();
 
-    let repo_metadata = github::get_repo_metadata(&repo_origin).await?;
+    let repo_metadata = github::get_repo_metadata(&repo_name.clone().unwrap()).await?;
 
-    debug!("Starting to handle repo {}", repo.name.unwrap());
+    debug!("Starting to handle repo {}", &repo_name.clone().unwrap());
 
     let last_updated = github::get_last_activity(&repo_metadata).await?;
     let dt_last_updated: DateTime<Utc> = DateTime::<Utc>::from_timestamp(last_updated, 0).expect("invalid timestamp");
@@ -27,9 +27,9 @@ async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
     // We put the hack in hackathon
     new_repo.date_created = DateTime::<Utc>::from_timestamp(github::get_created_at_time(&repo_metadata).await?, 0).expect("Invalid timestamp");
 
-    let file: GithubFile = match github::get_fern_file(&repo_origin, Some(&"cli".to_string())).await {
+    let file: GithubFile = match github::get_fern_file(&repo_name.clone().unwrap(), Some(&"cli".to_string())).await {
         Ok(_file) => _file,
-        Err(_) => {match github::get_fern_file(&repo_origin, None).await {
+        Err(_) => {match github::get_fern_file(&repo_name.clone().unwrap(), None).await {
             Ok(__file) => __file,
             Err(e) => {db::delete_entry(repo__id).await?; return Err(e)},
         }}// TODO if this still fails, delete DB entry
@@ -37,7 +37,7 @@ async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
 
     new_repo.hash = Some(github::get_fern_hash_from_github(&file));
     
-    let langs: Vec<String> = github::get_languages(&repo_origin).await?;
+    let langs: Vec<String> = github::get_languages(&repo_name.clone().unwrap()).await?;
 
     match github::is_fern_file_hash_equal(&new_repo.hash.as_ref().unwrap(), &repo_hash) {
         true => {},
@@ -63,7 +63,7 @@ async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
     let stars = github::get_star_count(&repo_metadata).await?;
     new_repo.stars = Some(stars);
     new_repo.last_updated = dt_last_updated;
-    new_repo.recommended_issues_count = Some(github::count_recommended_issues(&repo_origin, &new_repo.recommended_issue_labels.as_ref().unwrap()).await?);
+    new_repo.recommended_issues_count = Some(github::count_recommended_issues(&repo_name.clone().unwrap(), &new_repo.recommended_issue_labels.as_ref().unwrap()).await?);
 
     db::update_repo(new_repo).await?;
 
