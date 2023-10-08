@@ -41,7 +41,7 @@ async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
             technologies.sort();
             technologies.dedup();
 
-            // TODO date created. https://api.github.com/repos/g00gol/frienc
+            // TODO date created. https://api.github.com/repos/g00gol/frieren
             new_repo.technologies = Some(technologies);
             new_repo.difficulty = Some(content.difficulty.into());
             new_repo.recommended_issue_labels = Some(content.recommended_issue_labels);
