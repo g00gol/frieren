@@ -44,17 +44,15 @@ func CreateRepo(w http.ResponseWriter, r *http.Request) {
 		repo.LastUpdated = utils.GetCurrentTime()
 	}
 
-
-	filter := utils.ConstructFilters(r, types.Repo{})
-
-	// Get data from database
-	data, err := db.GetReposByFilters(filter)
-	if err != nil {
-		log.Println(err)
-	}
-	if len(data) > 0 {
-		http.Error(w, "Error - duplicate entry", http.StatusBadRequest);
-		return
+	// If the repo already exists, remove the old repo and insert the new one
+	oldRepo, err := db.GetRepoByName(repo.Name)
+	if err == nil {
+		// Delete old repo
+		_, err = db.DeleteRepoByName(oldRepo.Name)
+		if err != nil {
+			http.Error(w, "Error deleting old repo", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	// Insert repo into database
