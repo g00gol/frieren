@@ -133,13 +133,13 @@ type originMsg struct {
 type errMsg struct{ err error }
 
 type fernStruct struct {
-	name                     string   `json:"name"`
-	technologies             []string `json:"technologies"`
-	difficulty               int      `json:"difficulty"`
-	description              string   `json:"description"`
-	recommended_issue_labels []string `json:"recommended_issue_labels"`
-	repo_origin              string   `json:"repo_origin,omitempty"`
-	fern_branch              string   `json:"fern_branch,omitempty"`
+	Name                     string   `json:"name"`
+	Technologies             []string `json:"technologies"`
+	Difficulty               int      `json:"difficulty"`
+	Description              string   `json:"description"`
+	Recommended_issue_labels []string `json:"recommended_issue_labels"`
+	Repo_origin              string   `json:"repo_origin,omitempty"`
+	Fern_branch              string   `json:"fern_branch,omitempty"`
 }
 
 func checkForFern() tea.Msg {
@@ -154,6 +154,7 @@ func checkForFern() tea.Msg {
 	byteValue, _ := ioutil.ReadAll(fernFile)
 	err = json.Unmarshal(byteValue, &fern)
 	if err != nil {
+		log.Println("json.Unmarchal fault")
 		return errMsg{err}
 	}
 	return foundMsg{fern}
@@ -186,9 +187,12 @@ func sendPOST(fern fernStruct) tea.Cmd {
 			// Dump json to .fern file
 			var fern fernStruct
 			json.Unmarshal([]byte(fernJson), &fern)
-			fern.repo_origin = ""
+			fern.Repo_origin = ""
 
-			file, _ := os.OpenFile("open-source.fern", os.O_CREATE, os.ModePerm)
+			file, err := os.OpenFile("open-source.fern", os.O_WRONLY|os.O_CREATE, os.ModePerm)
+			if err != nil {
+				log.Printf("[OpenFile Error] %v\n", err)
+			}
 			defer file.Close()
 			log.Printf("Fern> %v\n", fern)
 			json.NewEncoder(file).Encode(fern)
@@ -302,14 +306,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				// Validate data
 				// TODO
 				// If valid, send POST
-				if m.not_found == true {
+				if m.not_found == true && m.ti_arr[len(m.ti_arr)-1].Focused() {
 					for i, _ := range m.ti_arr {
 						m.ti_arr[i].Blur()
 					}
-					m.fern.repo_origin = m.origin
+					m.fern.Repo_origin = m.origin
 					cmds = append(cmds, sendPOST(m.fern))
+					m.not_found = false
 				}
-				m.not_found = false
 			}
 			if msg.Type == tea.KeyDown {
 				for i, ti := range m.ti_arr {
