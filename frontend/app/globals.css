@@ -9,8 +9,8 @@ html, body {
 }
 
 @layer base {
-  html {
-    @apply text-base font-quicksand;
+  * {
+    @apply text-base font-quicksand outline-none;
   }
   h1 {
     @apply text-4xl font-playfair-display font-bold;
