@@ -47,5 +47,6 @@ async fn get_repos_collection() -> Result<Collection<Repo>, Box<dyn Error>> {
 pub async fn get_repos() -> Result<Cursor<Repo>, Box<dyn Error>> {
     let collection = get_repos_collection().await?;
     let cursor = collection.find(None, None).await?;
+    
     return Ok(cursor);
 }

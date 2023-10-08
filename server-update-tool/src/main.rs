@@ -18,6 +18,7 @@ async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
 
     github::update_last_activity(&repo_origin).await?;
 
+    github::get_star_count(&repo_origin).await?;
 
     return Ok(());
 }

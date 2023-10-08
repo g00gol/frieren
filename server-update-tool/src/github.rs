@@ -1,7 +1,8 @@
 use std::error::Error;
 use url::Url;
 use reqwest;
-use reqwest::header::USER_AGENT;
+use reqwest::header::{ACCEPT, USER_AGENT};
+use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 use serde_json;
 use md5;
@@ -122,3 +123,23 @@ fn is_fern_file_hash_equal(hash: String, repo: &db::Repo) -> bool {
     }
 }
 
+pub async fn get_star_count(remote_url: &String) -> Result<u64, Box<dyn Error>>{
+    let repo_owner = get_repo_owner_from_url(remote_url)?;
+    let repo_name = get_repo_name_from_url(remote_url)?;
+
+    // let uri = format!("https://api.github.com/repos/{}/{}", repo_owner, repo_name);
+    let uri = "https://api.github.com/repos/g00gol/frieren";
+
+    let json_data: serde_json::Value = reqwest::Client::new()
+        .get(uri)
+        .header(ACCEPT, "application/vnd.github+json")
+        .header(USER_AGENT, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36")
+        .send()
+        .await?
+        .json()
+        .await?;
+    let star_count: u64 = json_data.get("subscribers_count").unwrap().as_u64().unwrap();
+    println!("star count = {}", star_count);
+    
+    return Ok(star_count);
+}
