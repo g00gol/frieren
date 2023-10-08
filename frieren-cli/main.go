@@ -150,8 +150,10 @@ func sendPOST(fern fernStruct) tea.Cmd {
 			json.Unmarshal([]byte(fernJson), &fern)
 			fern.repo_origin = ""
 
+			file, _ := os.OpenFile("open-source.fern", os.O_CREATE, os.ModePerm)
+			defer file.Close()
 			log.Printf("%#v\n", fern)
-			_ := os.WriteFile("open-source.fern", fern, os.ModePerm)
+			json.NewEncoder(file).Encode(fern)
 			return postSuccessMsg{}
 		}
 		log.Printf("[Error] Issue registering project (status code = %v)\n", response.StatusCode)
