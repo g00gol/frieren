@@ -9,16 +9,41 @@ export default function Cards({ children }) {
   const { searchTerm } = useContext(SearchbarContext);
 
   useEffect(() => {
-    fetchApi("104.248.58.127/api/repos").then((data) => {
-      console.log(data);
-      setData(data);
+    if (searchTerm.trim() === "") {
+      fetchApi(`104.248.58.127/api/repos`).then((data) => {
+        setData(data ?? []);
+      });
+      return;
+    }
+
+    let dataSet = [];
+    fetchApi(`104.248.58.127/api/repos?name=${searchTerm}`).then((data) => {
+      dataSet.push(...(data ?? []));
+
+      fetchApi(`104.248.58.127/api/repos?technologies=${searchTerm}`).then(
+        (data) => {
+          dataSet.push(...(data ?? []));
+
+          fetchApi(`104.248.58.127/api/repos?languages=${searchTerm}`).then(
+            (data) => {
+              dataSet.push(...(data ?? []));
+
+              setData(
+                Array.from(
+                  new Map(dataSet.map((item) => [item["hash"], item])).values()
+                )
+              );
+            }
+          );
+        }
+      );
     });
   }, [searchTerm]);
 
   return (
     <>
       {data.map((project) => (
-        <Card key={project.id} project={project} />
+        <Card key={project.hash} project={project} />
       ))}
     </>
   );
