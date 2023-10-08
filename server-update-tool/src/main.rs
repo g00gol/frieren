@@ -46,7 +46,8 @@ async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
     let stars = github::get_star_count(&repo_origin).await?;
     new_repo.stars = Some(stars);
     new_repo.last_updated = dt_last_updated;
-    github::get_languages(&repo_origin).await?;
+
+    let langs: Vec<&String> = github::get_languages(&repo_origin).await?;
 
     return Ok(());
 }

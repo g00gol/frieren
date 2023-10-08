@@ -148,5 +148,26 @@ pub async fn get_star_count(remote_url: &String) -> Result<u64, Box<dyn Error>>{
     
     return Ok(star_count);
 }
-ln!("languages = {:?}", json_data);
+
+pub async fn get_languages(remote_url: &String) -> Result<Vec<&String>, Box<dyn Error>>{
+    let repo_owner = get_repo_owner_from_url(remote_url)?;
+    let repo_name = get_repo_name_from_url(remote_url)?;
+
+    let uri = format!("https://api.github.com/repos/{}/{}/languages", repo_owner, repo_name);
+
+    // let json_data: serde_json::Value = reqwest::Client::new()
+    let json_data: serde_json::Value = reqwest::Client::new()
+        //.get(uri)
+        .get("https://api.github.com/repos/mdt1026/HackTCNJ-arduino-fsr/languages")
+        .header(ACCEPT, "application/vnd.github+json")
+        .header(USER_AGENT, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36")
+        .send()
+        .await?
+        .json()
+        .await?;
+    let lang_array: &serde_json::Map<String, serde_json::Value> = json_data.as_object().unwrap();
+    let langs: Vec<&String> = lang_array.keys().collect();
+    println!("languages = {:?}", langs);
     
+    return Ok(langs);
+}
