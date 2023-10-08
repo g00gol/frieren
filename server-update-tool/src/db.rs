@@ -16,7 +16,7 @@ pub struct Repo {
     pub recommended_issue_labels: Option<Vec<String>>,
     #[serde(with = "bson::serde_helpers::chrono_datetime_as_bson_datetime")]
     pub last_updated: DateTime<Utc>,
-    pub stars: Option<u32>,
+    pub stars: Option<u64>,
     pub recommended_issues_count: Option<u32>,
     pub repo_origin: String,
     pub fern_branch: Option<String>,

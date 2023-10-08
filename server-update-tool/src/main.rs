@@ -28,7 +28,8 @@ async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
         }
     }
 
-    github::get_star_count(&repo_origin).await?;
+    let stars = github::get_star_count(&repo_origin).await?;
+    github::get_languages(&repo_origin).await?;
 
     return Ok(());
 }
