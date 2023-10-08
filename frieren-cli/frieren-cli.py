@@ -5,6 +5,7 @@ import sys
 import json
 import git
 import re
+import requests
 
 if __name__ == "__main__":
     repo = git.Repo(os.getcwd(), search_parent_directories=True)
@@ -28,10 +29,12 @@ if __name__ == "__main__":
 
     fern = {"name": re.search(r"/([^/]*/[^/]*)$","https://github.com/g00gol/frieren").group(1), "technologies": technologies, "difficulty": difficulty, "description": desc, "recommended_issue_labels": recommended_issue_labels}
 
-    with open("open-source.fern", "w+") as f:
-        json.dump(fern, f)
-
     fern['repo_origin'] = origin
-    print(origin)
     # Make api call
-    requests.post("localhost:8080/repos", json=fern)
+    r = requests.post("http://127.0.0.1:8080/repos", json=fern)
+    if not 200 <= r.status_code < 300:
+        print("Error registering project")
+    else:
+        with open("open-source.fern", "w+") as f:
+            del fern['repo_origin']
+            json.dump(fern, f)

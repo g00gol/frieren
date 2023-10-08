@@ -44,6 +44,19 @@ func CreateRepo(w http.ResponseWriter, r *http.Request) {
 		repo.LastUpdated = utils.GetCurrentTime()
 	}
 
+
+	filter := utils.ConstructFilters(r, types.Repo{})
+
+	// Get data from database
+	data, err := db.GetReposByFilters(filter)
+	if err != nil {
+		log.Println(err)
+	}
+	if len(data) > 0 {
+		http.Error(w, "Error - duplicate entry", http.StatusBadRequest);
+		return
+	}
+
 	// Insert repo into database
 	_, err = db.GetCollection("repos").InsertOne(context.TODO(), repo)
 	if err != nil {
