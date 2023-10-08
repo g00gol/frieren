@@ -3,7 +3,7 @@ use url::Url;
 use reqwest;
 use reqwest::header::{ACCEPT, USER_AGENT};
 use serde::{Serialize, Deserialize};
-use serde_json;
+use serde_json::{self, Value};
 // use mongodb::bson::DateTime;
 use chrono::{DateTime};
 use mongodb::bson::oid::ObjectId;
@@ -115,19 +115,10 @@ pub async fn get_fern_file(remote_uri: &String, branch_name: Option<&String>) ->
     return Ok(file); 
 }
 
-pub async fn get_created_at_time(remote_url: &String) -> Result<i64, Box<dyn Error>> {
+pub async fn get_created_at_time(repo_metadata: &Value) -> Result<i64, Box<dyn Error>> {
     debug!("Getting created at time");
-    let repo_owner = get_repo_owner_from_url(remote_url)?;
-    let repo_name = get_repo_name_from_url(remote_url)?;
 
-    let github_uri = format!("https://api.github.com/repos/{repo_owner}/{repo_name}");
-
-    let json: serde_json::Value = get_request_wrapper(&github_uri)
-        .await?
-        .json()
-        .await?;
-
-    let time_string = json["created_at"].to_string();
+    let time_string = repo_metadata["created_at"].to_string();
     let timestamp_str = time_string.trim_matches('"');
     let timestamp = DateTime::parse_from_rfc3339(timestamp_str)?;
 
@@ -136,24 +127,16 @@ pub async fn get_created_at_time(remote_url: &String) -> Result<i64, Box<dyn Err
 
 }
 
-pub async fn get_last_activity(remote_url: &String) -> Result<i64, Box<dyn Error>>{
-    debug!("Getting last activity time");
-    let repo_owner = get_repo_owner_from_url(remote_url)?;
-    let repo_name = get_repo_name_from_url(remote_url)?;
+pub async fn get_last_activity(repo_metadata: &Value) -> Result<i64, Box<dyn Error>>{
+    debug!("Getting created last activity time");
 
-    let github_uri = format!("https://api.github.com/repos/{repo_owner}/{repo_name}/activity?per_page=1");
-
-    let json: serde_json::Value = get_request_wrapper(&github_uri)
-        .await?
-        .json()
-        .await?;
-
-    let time_string = json[0]["timestamp"].to_string();
+    let time_string = repo_metadata["updated_at"].to_string();
     let timestamp_str = time_string.trim_matches('"');
     let timestamp = DateTime::parse_from_rfc3339(timestamp_str)?;
 
     debug!("Successfully got last activity time");
     return Ok(timestamp.timestamp());
+
 }
 
 pub fn get_fern_hash_from_github(file: &GithubFile) -> String {
@@ -167,8 +150,8 @@ pub fn is_fern_file_hash_equal(hash: &String, old_hash: &Option<String>) -> bool
     }
 }
 
-pub async fn get_star_count(remote_url: &String) -> Result<u64, Box<dyn Error>>{
-    debug!("Getting star count");
+pub async fn get_repo_metadata(remote_url: &String) -> Result<Value, Box<dyn Error>> {
+    debug!("Getting repo metadata");
     let repo_owner = get_repo_owner_from_url(remote_url)?;
     let repo_name = get_repo_name_from_url(remote_url)?;
 
@@ -179,7 +162,14 @@ pub async fn get_star_count(remote_url: &String) -> Result<u64, Box<dyn Error>>{
         .json()
         .await?;
     
-    let star_count: u64 = json_data.get("subscribers_count").unwrap().as_u64().unwrap();
+    return Ok(json_data);
+}
+
+pub async fn get_star_count(repo_metadata: &Value) -> Result<u64, Box<dyn Error>>{
+
+    debug!("Getting star count");
+
+    let star_count: u64 = repo_metadata.get("subscribers_count").unwrap().as_u64().unwrap();
     
     debug!("Successfully got star count");
     return Ok(star_count);
