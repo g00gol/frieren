@@ -23,20 +23,26 @@ async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
     };
 
     new_repo.hash = Some(github::get_fern_hash_from_github(&file));
-
+    
     let langs: Vec<String> = github::get_languages(&repo_origin).await?;
 
     match github::is_fern_file_hash_equal(&new_repo.hash.as_ref().unwrap(), &repo_hash) {
         true => {},
         false => {
+
             let content = fern::read_b64_content(file.content.trim().to_string()).unwrap(); // we put the hack in hackathon
             new_repo.name = Some(content.name);
             new_repo.description = Some(content.description);
             let mut technologies = content.technologies.clone();
+
+            println!("techs: {:?}", technologies);
             // technologies.append(langs);
             langs.iter().for_each(|x| technologies.push(x.to_string()));
-            // technologies.iter().for_each(|x| println!("tech: {}", x.to_string()));
-            // technologies = technologies.into_iter().unique();
+            technologies.iter().for_each(|x| println!("tech: {}", x.to_string()));
+            println!("------");
+            technologies.sort();
+            technologies.dedup();
+            technologies.iter().for_each(|x| println!("tech: {}", x.to_string()));
 
             // TODO date created. https://api.github.com/repos/g00gol/frienc
             new_repo.technologies = Some(content.technologies);
