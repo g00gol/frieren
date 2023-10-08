@@ -85,6 +85,28 @@ pub async fn get_fern_file(remote_uri: &String, branch_name: Option<&String>) ->
     return Ok(file); 
 }
 
+pub async fn get_created_at_time(remote_url: &String) -> Result<i64, Box<dyn Error>> {
+    let repo_owner = get_repo_owner_from_url(remote_url)?;
+    let repo_name = get_repo_name_from_url(remote_url)?;
+
+    let github_uri = format!("https://api.github.com/repos/{repo_owner}/{repo_name}");
+
+    let json: serde_json::Value = reqwest::Client::new()
+        .get(github_uri)
+        .header(USER_AGENT, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36")
+        .send()
+        .await?
+        .json()
+        .await?;
+
+    let time_string = json[0]["created_at"].to_string();
+    let timestamp_str = time_string.trim_matches('"');
+    let timestamp = DateTime::parse_from_rfc3339(timestamp_str)?;
+
+    return Ok(timestamp.timestamp());
+
+}
+
 pub async fn get_last_activity(remote_url: &String) -> Result<i64, Box<dyn Error>>{
     let repo_owner = get_repo_owner_from_url(remote_url)?;
     let repo_name = get_repo_name_from_url(remote_url)?;
@@ -111,7 +133,6 @@ pub fn get_fern_hash_from_github(file: &GithubFile) -> String {
 }
 
 pub fn is_fern_file_hash_equal(hash: &String, old_hash: &Option<String>) -> bool {
-    // TODO should make md5 compute a separate function and pass that in accordingly
     return match old_hash {
         Some(_hash) => _hash.to_string() == hash.to_string(),
         None => false
@@ -165,6 +186,7 @@ pub async fn count_recommended_issues(remote_url: &String, recommended_issue_lab
     let mut ret = 0;
 
     for label in recommended_issue_labels.iter() {
+        // TODO this doesn't handle duplicates
         let uri = format!("https://api.github.com/repos/{}/{}/issues?labels={}", repo_owner, repo_name, label);
 
         let json_data: Vec<serde_json::Value> = reqwest::Client::new()

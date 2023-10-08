@@ -17,6 +17,9 @@ async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
     let last_updated = github::get_last_activity(&repo_origin).await?;
     let dt_last_updated: DateTime<Utc> = DateTime::<Utc>::from_timestamp(last_updated, 0).expect("invalid timestamp");
     
+    // We put the hack in hackathon
+    new_repo.date_created = DateTime::<Utc>::from_timestamp(github::get_created_at_time(&repo_origin).await?, 0).expect("Invalid timestamp");
+
     let file: GithubFile = match github::get_fern_file(&repo_origin, Some(&"cli".to_string())).await {
         Ok(_file) => _file,
         Err(_) => github::get_fern_file(&repo_origin, None).await?
@@ -40,7 +43,6 @@ async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
             technologies.sort();
             technologies.dedup();
 
-            // TODO date created. https://api.github.com/repos/g00gol/frieren
             new_repo.technologies = Some(technologies);
             new_repo.difficulty = Some(content.difficulty.into());
             new_repo.recommended_issue_labels = Some(content.recommended_issue_labels);
