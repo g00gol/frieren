@@ -38,14 +38,11 @@ async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
             println!("techs: {:?}", technologies);
             // technologies.append(langs);
             langs.iter().for_each(|x| technologies.push(x.to_string()));
-            technologies.iter().for_each(|x| println!("tech: {}", x.to_string()));
-            println!("------");
             technologies.sort();
             technologies.dedup();
-            technologies.iter().for_each(|x| println!("tech: {}", x.to_string()));
 
             // TODO date created. https://api.github.com/repos/g00gol/frienc
-            new_repo.technologies = Some(content.technologies);
+            new_repo.technologies = Some(technologies);
             new_repo.difficulty = Some(content.difficulty.into());
             new_repo.recommended_issue_labels = Some(content.recommended_issue_labels);
             // TODO recommended issue count

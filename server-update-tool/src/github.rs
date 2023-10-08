@@ -166,8 +166,6 @@ pub async fn get_languages(remote_url: &String) -> Result<Vec<String>, Box<dyn E
         .await?;
     let lang_array: &serde_json::Map<String, serde_json::Value> = json_data.as_object().unwrap();
     let langs: Vec<String> = lang_array.keys().cloned().collect();
-
-    println!("langs = {:?}", langs);
     
     return Ok(langs);
 }
