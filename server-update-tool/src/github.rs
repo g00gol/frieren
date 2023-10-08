@@ -5,7 +5,7 @@ use reqwest::header::{ACCEPT, USER_AGENT};
 use serde::{Serialize, Deserialize};
 use serde_json::{self, Value};
 // use mongodb::bson::DateTime;
-use chrono::{DateTime};
+use chrono::{DateTime, Utc};
 use mongodb::bson::oid::ObjectId;
 use reqwest::Response;
 use md5;
@@ -51,7 +51,7 @@ fn get_path_segments_from_url(remote_url: &str) -> Result<Vec<String>, Box<dyn E
     };
 
     // https://github.com/{REPO_OWNER}/{REPO_NAME}
-    assert_eq!(3, path_segments.len()); // 3rd element is ""
+    assert_eq!(2, path_segments.len()); // 3rd element is ""
 
     return Ok(path_segments); 
 
@@ -69,19 +69,31 @@ fn get_repo_name_from_url(remote_url: &String) -> Result<String, Box<dyn Error>>
 
 async fn get_request_wrapper(url: &String) -> Result<Response, Box<dyn Error>> {
 
+<<<<<<< Updated upstream
     let sleep_duration = time::Duration::from_millis(5000);
 
     debug!("Attempting to make request to {}", url);
 
+=======
+    // let sleep_duration = time::Duration::from_millis(5000);
+    
+>>>>>>> Stashed changes
     for n in 1..3 { // we put the hack in hackathon
         let response = reqwest::Client::new()
-            .get(url)
+        .get(url)
         .header(USER_AGENT, "Frieren API")
         .send()
         .await?;
         match response.status().as_u16() {
             403 => {
+<<<<<<< Updated upstream
                 debug!("Rate limiter. Sleeping {}ms", sleep_duration.as_millis());
+=======
+                let timestamp = response.headers()["x-ratelimit-reset"].to_str()?.parse::<i64>()?;
+                let now = chrono::offset::Utc::now().timestamp();
+                let sleep_duration = time::Duration::from_millis(((timestamp - now) * 1000).try_into().unwrap());
+                println!("Sleeping for {:?} ms...", sleep_duration);
+>>>>>>> Stashed changes
                 thread::sleep(sleep_duration);
             },
             200 => {  
