@@ -2,9 +2,10 @@ use std::error::Error;
 use url::Url;
 use reqwest;
 use reqwest::header::USER_AGENT;
-use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 use serde_json;
+use md5;
+use crate::db;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Links {
@@ -96,3 +97,28 @@ pub async fn update_last_activity(remote_url: &String) -> Result<(), Box<dyn Err
 
     return Ok(());
 }
+
+fn get_fern_hash_from_github(file: &GithubFile) -> String {
+    return format!("{:x}", md5::compute(&file.content));
+}
+
+pub async fn fern_file_job(file: &GithubFile, repo: &db::Repo) -> Result<(), Box<dyn Error>> {
+    let github_fern_file_hash = get_fern_hash_from_github(file);
+    return match is_fern_file_hash_equal(github_fern_file_hash, repo) {
+        true => Ok(()),
+        false => {
+            // TODO implement all fern file DB updates
+
+            return Ok(());
+        }
+    }
+}
+
+fn is_fern_file_hash_equal(hash: String, repo: &db::Repo) -> bool {
+    // TODO should make md5 compute a separate function and pass that in accordingly
+    return match &repo.hash {
+        Some(_hash) => _hash.to_string() == hash,
+        None => false
+    }
+}
+

@@ -1,22 +1,25 @@
 use mongodb::{Client, Database, Cursor, Collection, options::{ClientOptions, ResolverConfig}};
-use mongodb::bson::DateTime;
+use mongodb::bson::{DateTime, to_document};
 use std::env;
 use std::error::Error;
 use serde::{Serialize, Deserialize};
+use bson::oid::ObjectId;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Repo {
-    pub name: String,
-    pub description: String,
-    pub languages: Vec<String>,
-    pub technologies: Vec<String>,
-    pub difficulty: u32, // 0-4
-    pub recommended_issue_labels: Vec<String>,
-    pub last_updated: DateTime,
-    pub stars: u32,
-    pub recommended_issues_count: u32,
+    pub _id: ObjectId,
+    pub name: Option<String>,
+    pub description: Option<String>,
+    pub languages: Option<Vec<String>>,
+    pub technologies: Option<Vec<String>>,
+    pub difficulty: Option<u32>, // 0-4
+    pub recommended_issue_labels: Option<Vec<String>>,
+    pub last_updated: Option<DateTime>,
+    pub stars: Option<u32>,
+    pub recommended_issues_count: Option<u32>,
     pub repo_origin: String,
-    pub fern_branch: String
+    pub fern_branch: Option<String>,
+    pub hash: Option<String>
 }
 
 async fn get_mongo_client() -> Result<Client, Box<dyn Error>> {
