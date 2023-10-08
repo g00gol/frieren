@@ -144,12 +144,11 @@ pub async fn get_star_count(remote_url: &String) -> Result<u64, Box<dyn Error>>{
         .json()
         .await?;
     let star_count: u64 = json_data.get("subscribers_count").unwrap().as_u64().unwrap();
-    println!("star count = {}", star_count);
     
     return Ok(star_count);
 }
 
-pub async fn get_languages(remote_url: &String) -> Result<Vec<&String>, Box<dyn Error>>{
+pub async fn get_languages(remote_url: &String) -> Result<Vec<String>, Box<dyn Error>>{
     let repo_owner = get_repo_owner_from_url(remote_url)?;
     let repo_name = get_repo_name_from_url(remote_url)?;
 
@@ -166,8 +165,7 @@ pub async fn get_languages(remote_url: &String) -> Result<Vec<&String>, Box<dyn 
         .json()
         .await?;
     let lang_array: &serde_json::Map<String, serde_json::Value> = json_data.as_object().unwrap();
-    let langs: Vec<&String> = lang_array.keys().collect();
-    println!("languages = {:?}", langs);
+    let langs: Vec<String> = lang_array.keys().cloned().collect();
     
     return Ok(langs);
 }

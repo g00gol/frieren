@@ -6,6 +6,7 @@ use tokio;
 use std::error::Error;
 use github::GithubFile;
 use chrono::{DateTime, Utc};
+use std::collections::hash_set::HashSet;
 
 async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
     let ref repo_origin = repo.repo_origin;
@@ -23,14 +24,19 @@ async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
 
     new_repo.hash = Some(github::get_fern_hash_from_github(&file));
 
+    let langs: Vec<String> = github::get_languages(&repo_origin).await?;
+
     match github::is_fern_file_hash_equal(&new_repo.hash.as_ref().unwrap(), &repo_hash) {
         true => {},
         false => {
             let content = fern::read_b64_content(file.content.trim().to_string()).unwrap(); // we put the hack in hackathon
             new_repo.name = Some(content.name);
             new_repo.description = Some(content.description);
-            // TODO add technologies
-            // TODO query languages
+            let mut technologies = content.technologies.clone();
+            // technologies.append(langs);
+            langs.iter().for_each(|x| technologies.push(x.to_string()));
+            // technologies.iter().for_each(|x| println!("tech: {}", x.to_string()));
+            // technologies = technologies.into_iter().unique();
 
             // TODO date created. https://api.github.com/repos/g00gol/frienc
             new_repo.technologies = Some(content.technologies);
@@ -38,16 +44,12 @@ async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
             new_repo.recommended_issue_labels = Some(content.recommended_issue_labels);
             // TODO recommended issue count
 
-            // to_insert_hash = Some(new_hash);
-            println!("Code!");
         }
     }
 
     let stars = github::get_star_count(&repo_origin).await?;
     new_repo.stars = Some(stars);
     new_repo.last_updated = dt_last_updated;
-
-    let langs: Vec<&String> = github::get_languages(&repo_origin).await?;
 
     return Ok(());
 }
