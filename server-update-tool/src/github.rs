@@ -43,13 +43,9 @@ pub struct GithubFile {
     pub _links: Links
 }
 
-fn get_path_segments_from_url(remote_url: &str) -> Result<Vec<String>, Box<dyn Error>> {
-    let url = Url::parse(&remote_url)?;
-
-    let path_segments: Vec<String> = match url.path_segments() {
-        Some(segments) => segments.map(ToString::to_string).collect(),
-        None => Vec::new(),
-    };
+fn get_path_segments_from_url(name: &str) -> Result<Vec<String>, Box<dyn Error>> {
+    let _path_segments: Vec<&str> = name.split("/").collect();
+    let path_segments: Vec<String> = _path_segments.iter().map(|s| s.to_string()).collect();
 
     // https://github.com/{REPO_OWNER}/{REPO_NAME}
     assert_ge!(path_segments.len(), 2); 
@@ -58,13 +54,13 @@ fn get_path_segments_from_url(remote_url: &str) -> Result<Vec<String>, Box<dyn E
 
 }
 
-fn get_repo_owner_from_url(remote_url: &String) -> Result<String, Box<dyn Error>> {
-    let path_segments = get_path_segments_from_url(remote_url)?;
+fn get_repo_owner_from_url(name: &String) -> Result<String, Box<dyn Error>> {
+    let path_segments = get_path_segments_from_url(name)?;
     return Ok(path_segments[0].to_string());
 }
 
-fn get_repo_name_from_url(remote_url: &String) -> Result<String, Box<dyn Error>> {
-    let path_segments = get_path_segments_from_url(remote_url)?;
+fn get_repo_name_from_url(name: &String) -> Result<String, Box<dyn Error>> {
+    let path_segments = get_path_segments_from_url(name)?;
     return Ok(path_segments[1].to_string());
 }
 
@@ -100,10 +96,10 @@ async fn get_request_wrapper(url: &String) -> Result<Response, Box<dyn Error>> {
     return Err("Rate limiter too strong".into()); // We put the hack in hackathon    
 }
 
-pub async fn get_fern_file(remote_uri: &String, branch_name: Option<&String>) -> Result<GithubFile, Box<dyn Error>> {
+pub async fn get_fern_file(name: &String, branch_name: Option<&String>) -> Result<GithubFile, Box<dyn Error>> {
     debug!("Getting fern file");
-    let repo_owner = get_repo_owner_from_url(&remote_uri)?;
-    let repo_name = get_repo_name_from_url(&remote_uri)?;
+    let repo_owner = get_repo_owner_from_url(&name)?;
+    let repo_name = get_repo_name_from_url(&name)?;
 
     let github_uri = match branch_name {
         Some(_branch) => format!("https://api.github.com/repos/{}/{}/contents/open-source.fern?ref={}", repo_owner, repo_name, _branch),
@@ -154,10 +150,10 @@ pub fn is_fern_file_hash_equal(hash: &String, old_hash: &Option<String>) -> bool
     }
 }
 
-pub async fn get_repo_metadata(remote_url: &String) -> Result<Value, Box<dyn Error>> {
+pub async fn get_repo_metadata(name: &String) -> Result<Value, Box<dyn Error>> {
     debug!("Getting repo metadata");
-    let repo_owner = get_repo_owner_from_url(remote_url)?;
-    let repo_name = get_repo_name_from_url(remote_url)?;
+    let repo_owner = get_repo_owner_from_url(name)?;
+    let repo_name = get_repo_name_from_url(name)?;
 
     let uri = format!("https://api.github.com/repos/{}/{}", repo_owner, repo_name);
 
@@ -179,10 +175,10 @@ pub async fn get_star_count(repo_metadata: &Value) -> Result<u64, Box<dyn Error>
     return Ok(star_count);
 }
 
-pub async fn get_languages(remote_url: &String) -> Result<Vec<String>, Box<dyn Error>>{
+pub async fn get_languages(name: &String) -> Result<Vec<String>, Box<dyn Error>>{
     debug!("Getting languages");
-    let repo_owner = get_repo_owner_from_url(remote_url)?;
-    let repo_name = get_repo_name_from_url(remote_url)?;
+    let repo_owner = get_repo_owner_from_url(name)?;
+    let repo_name = get_repo_name_from_url(name)?;
 
     let uri = format!("https://api.github.com/repos/{}/{}/languages", repo_owner, repo_name);
 
@@ -199,10 +195,10 @@ pub async fn get_languages(remote_url: &String) -> Result<Vec<String>, Box<dyn E
     return Ok(langs);
 }
 
-pub async fn count_recommended_issues(remote_url: &String, recommended_issue_labels: &Vec<String>) -> Result<usize, Box<dyn Error>> {
+pub async fn count_recommended_issues(name: &String, recommended_issue_labels: &Vec<String>) -> Result<usize, Box<dyn Error>> {
     debug!("Getting recommended issues");
-    let repo_owner = get_repo_owner_from_url(remote_url)?;
-    let repo_name = get_repo_name_from_url(remote_url)?;
+    let repo_owner = get_repo_owner_from_url(name)?;
+    let repo_name = get_repo_name_from_url(name)?;
 
     let mut ret = 0;
 

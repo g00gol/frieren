@@ -70,3 +70,12 @@ pub async fn update_repo(new_repo: &Repo) -> Result<(), Box<dyn Error>> {
     debug!("Successfully updated DB");
     return Ok(());
 }
+
+pub async fn delete_entry(_id: &ObjectId) -> Result<(), Box<dyn Error>> {
+    debug!("Attempting to delete entry {:?}", _id);
+    let col = get_repos_collection().await?;
+    col.find_one_and_delete(doc!{
+        "_id": _id
+    }, None, ).await?;
+    return Ok(());
+}
