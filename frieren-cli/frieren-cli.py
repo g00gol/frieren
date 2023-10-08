@@ -34,3 +34,4 @@ if __name__ == "__main__":
     fern['repo_origin'] = origin
     print(origin)
     # Make api call
+    requests.post("localhost:8080/repos", json=fern)
