@@ -8,6 +8,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/progress"
@@ -108,6 +110,9 @@ func fetchOrigin(repo *git.Repository) tea.Cmd {
 		}
 		url := origin.Config().URLs[0]
 		url = url[:len(url)-4]
+		if strings.HasPrefix(url, "git") {
+			url = "https://github.com/" + strings.Split(url, ":")[1]
+		}
 		branch, err := getBranchNameFromRepo(repo)
 		if err != nil {
 			return errMsg{err}
@@ -250,6 +255,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmd = m.progress.IncrPercent(0.2)
 		cmds = append(cmds, cmd)
 		m.prog_msg += "❌" + "\nFern file not found... Generating new file... "
+		m.fern = fernStruct{}
 		m.not_found = true
 	case foundMsg:
 		cmd = m.progress.IncrPercent(0.2)
@@ -307,9 +313,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				// TODO
 				// If valid, send POST
 				if m.not_found == true && m.ti_arr[len(m.ti_arr)-1].Focused() {
-					for i, _ := range m.ti_arr {
-						m.ti_arr[i].Blur()
-					}
+					m.ti_arr[0].Blur()
+					m.fern.Technologies = strings.Split(m.ti_arr[0].Value(), ",")
+					m.ti_arr[1].Blur()
+					i, _ := strconv.Atoi(m.ti_arr[1].Value())
+					m.fern.Difficulty = i
+					m.ti_arr[2].Blur()
+					m.fern.Description = m.ti_arr[2].Value()
+					m.ti_arr[3].Blur()
+					m.fern.Recommended_issue_labels = strings.Split(m.ti_arr[3].Value(), ",")
+
+					m.fern.Name = strings.TrimPrefix(m.origin, "https://github.com/")
 					m.fern.Repo_origin = m.origin
 					cmds = append(cmds, sendPOST(m.fern))
 					m.not_found = false
@@ -354,8 +368,7 @@ func (m model) View() string {
 	helpMessage := ""
 	myFigure := figure.NewColorFigure("Frieren  Open  Source", "jazmine", "blue", true)
 	cstr := myFigure.ColorString()
-	s := cstr + "\n" +
-		m.prog_msg + "\n\n" +
+	s := cstr + "\n" + m.prog_msg + "\n\n" +
 		m.progress.View() + "\n"
 
 	if m.not_found == true {
