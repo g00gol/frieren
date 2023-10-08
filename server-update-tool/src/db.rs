@@ -19,7 +19,7 @@ pub struct Repo {
     #[serde(with = "bson::serde_helpers::chrono_datetime_as_bson_datetime")]
     pub date_created: DateTime<Utc>,
     pub stars: Option<u64>,
-    pub recommended_issues_count: Option<u32>,
+    pub recommended_issues_count: Option<usize>,
     pub repo_origin: String,
     pub fern_branch: Option<String>,
     pub hash: Option<String>

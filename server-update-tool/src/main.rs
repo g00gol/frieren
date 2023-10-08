@@ -36,7 +36,6 @@ async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
             let mut technologies = content.technologies.clone();
 
             println!("techs: {:?}", technologies);
-            // technologies.append(langs);
             langs.iter().for_each(|x| technologies.push(x.to_string()));
             technologies.sort();
             technologies.dedup();
@@ -45,7 +44,6 @@ async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
             new_repo.technologies = Some(technologies);
             new_repo.difficulty = Some(content.difficulty.into());
             new_repo.recommended_issue_labels = Some(content.recommended_issue_labels);
-            // TODO recommended issue count
 
         }
     }
@@ -53,6 +51,7 @@ async fn handle_repo(repo: db::Repo) -> Result<(), Box<dyn Error>> {
     let stars = github::get_star_count(&repo_origin).await?;
     new_repo.stars = Some(stars);
     new_repo.last_updated = dt_last_updated;
+    new_repo.recommended_issues_count = Some(github::count_recommended_issues(&repo_origin, &new_repo.recommended_issue_labels.as_ref().unwrap()).await?);
 
     return Ok(());
 }

@@ -110,17 +110,6 @@ pub fn get_fern_hash_from_github(file: &GithubFile) -> String {
     return format!("{:x}", md5::compute(&file.content));
 }
 
-// pub async fn fern_file_job(file: &GithubFile, hash: &Option<String>) -> Result<Option<String>, Box<dyn Error>> {
-//     let github_fern_file_hash = get_fern_hash_from_github(file);
-//     return match is_fern_file_hash_equal(github_fern_file_hash, hash) {
-//         true => Ok(None),
-//         false => {
-
-//             return Ok(Some(github_fern_file_hash.clone()));
-//         }
-//     }
-// }
-
 pub fn is_fern_file_hash_equal(hash: &String, old_hash: &Option<String>) -> bool {
     // TODO should make md5 compute a separate function and pass that in accordingly
     return match old_hash {
@@ -168,4 +157,27 @@ pub async fn get_languages(remote_url: &String) -> Result<Vec<String>, Box<dyn E
     let langs: Vec<String> = lang_array.keys().cloned().collect();
     
     return Ok(langs);
+}
+
+pub async fn count_recommended_issues(remote_url: &String, recommended_issue_labels: &Vec<String>) -> Result<usize, Box<dyn Error>> {
+    let repo_owner = get_repo_owner_from_url(remote_url)?;
+    let repo_name = get_repo_name_from_url(remote_url)?;
+
+    let mut ret = 0;
+
+    for label in recommended_issue_labels.iter() {
+        let uri = format!("https://api.github.com/repos/{}/{}/issues?labels={}", repo_owner, repo_name, label);
+
+        let json_data: Vec<serde_json::Value> = reqwest::Client::new()
+            .get(uri)
+            .header(ACCEPT, "application/vnd.github+json")
+            .header(USER_AGENT, "Frieren API")
+            .send()
+            .await?
+            .json()
+            .await?;
+
+        ret+=json_data.len();
+    }
+    return Ok(ret);
 }
