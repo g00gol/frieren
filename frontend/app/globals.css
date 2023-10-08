@@ -5,4 +5,26 @@
 html, body {
   width: 100%;
   height: 100%;
+  overflow-y: auto
+}
+
+@layer base {
+  html {
+    @apply text-base font-quicksand;
+  }
+  h1 {
+    @apply text-4xl font-playfair-display font-bold;
+  }
+  h2 {
+    @apply text-3xl font-playfair-display;
+  }
+  h3 {
+    @apply text-2xl font-quicksand;
+  }
+  h4 {
+    @apply text-xl;
+  }
+  small {
+    @apply text-sm;
+  }
 }

@@ -1,6 +1,8 @@
 import { Playfair_Display, Quicksand } from "next/font/google";
 
 import "./globals.css";
+import Nav from "@/components/nav";
+import ContextProvider from "@/context/context";
 
 const playfairDisplay = Playfair_Display({
   subsets: ["latin-ext"],
@@ -20,11 +22,14 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html className="bg-night-blue text-mage-silver" lang="en">
       <body
-        className={`${playfairDisplay.className} bg-night-blue text-mage-silver`}
+        className={`${playfairDisplay.variable} ${quicksand.variable} w-3/6 mx-auto`}
       >
-        {children}
+        <ContextProvider>
+          <Nav />
+          {children}
+        </ContextProvider>
       </body>
     </html>
   );
