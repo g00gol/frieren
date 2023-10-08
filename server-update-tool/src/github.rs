@@ -129,7 +129,7 @@ pub fn is_fern_file_hash_equal(hash: &String, old_hash: &Option<String>) -> bool
     }
 }
 
-pub async fn get_star_count(remote_url: &String) -> Result<u64, Box<dyn Error>>{
+pub async fn get_star_count(remote_url: &String) -> Result<u32, Box<dyn Error>>{
     let repo_owner = get_repo_owner_from_url(remote_url)?;
     let repo_name = get_repo_name_from_url(remote_url)?;
 
@@ -143,7 +143,7 @@ pub async fn get_star_count(remote_url: &String) -> Result<u64, Box<dyn Error>>{
         .await?
         .json()
         .await?;
-    let star_count: u64 = json_data.get("subscribers_count").unwrap().as_u64().unwrap();
+    let star_count: u32 = json_data.get("subscribers_count").unwrap().as_u64().unwrap();
     println!("star count = {}", star_count);
     
     return Ok(star_count);
