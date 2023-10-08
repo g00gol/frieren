@@ -2,15 +2,16 @@ use std::error::Error;
 use url::Url;
 use reqwest;
 use reqwest::header::{ACCEPT, USER_AGENT};
-use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 use serde_json;
 // use mongodb::bson::DateTime;
 use chrono::{DateTime};
 use mongodb::bson::oid::ObjectId;
-
+use reqwest::Response;
 use md5;
 use crate::db;
+use futures::future::{BoxFuture, FutureExt};
+use std::{thread, time};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Links {
@@ -49,7 +50,7 @@ fn get_path_segments_from_url(remote_url: &str) -> Result<Vec<String>, Box<dyn E
     };
 
     // https://github.com/{REPO_OWNER}/{REPO_NAME}
-    assert_eq!(2, path_segments.len());
+    assert_eq!(3, path_segments.len()); // 3rd element is ""
 
     return Ok(path_segments); 
 
@@ -65,6 +66,29 @@ fn get_repo_name_from_url(remote_url: &String) -> Result<String, Box<dyn Error>>
     return Ok(path_segments[1].to_string());
 }
 
+async fn get_request_wrapper(url: &String) -> Result<Response, Box<dyn Error>> {
+
+    let sleep_duration = time::Duration::from_millis(5000);
+
+    for n in 1..3 { // we put the hack in hackathon
+        let response = reqwest::Client::new()
+            .get(url)
+        .header(USER_AGENT, "Frieren API")
+        .send()
+        .await?;
+        match response.status().as_u16() {
+            403 => {
+                thread::sleep(sleep_duration);
+            },
+            200 => {  
+                return Ok(response)
+            } 
+            _ => return Err("Error while querying URL".into())
+        }
+    }
+    return Err("Rate limiter too strong".into()); // We put the hack in hackathon    
+}
+
 pub async fn get_fern_file(remote_uri: &String, branch_name: Option<&String>) -> Result<GithubFile, Box<dyn Error>> {
     let repo_owner = get_repo_owner_from_url(&remote_uri)?;
     let repo_name = get_repo_name_from_url(&remote_uri)?;
@@ -74,14 +98,11 @@ pub async fn get_fern_file(remote_uri: &String, branch_name: Option<&String>) ->
         None => format!("https://api.github.com/repos/{}/{}/contents/open-source.fern", repo_owner, repo_name)
     };
 
-    let file: GithubFile = reqwest::Client::new()
-        .get(github_uri)
-        .header(USER_AGENT, "Frieren API")
-        .send()
+    let file: GithubFile = get_request_wrapper(&github_uri)
         .await?
         .json()
         .await?;
-
+    
     return Ok(file); 
 }
 
@@ -91,10 +112,7 @@ pub async fn get_created_at_time(remote_url: &String) -> Result<i64, Box<dyn Err
 
     let github_uri = format!("https://api.github.com/repos/{repo_owner}/{repo_name}");
 
-    let json: serde_json::Value = reqwest::Client::new()
-        .get(github_uri)
-        .header(USER_AGENT, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36")
-        .send()
+    let json: serde_json::Value = get_request_wrapper(&github_uri)
         .await?
         .json()
         .await?;
@@ -113,10 +131,7 @@ pub async fn get_last_activity(remote_url: &String) -> Result<i64, Box<dyn Error
 
     let github_uri = format!("https://api.github.com/repos/{repo_owner}/{repo_name}/activity?per_page=1");
 
-    let json: serde_json::Value = reqwest::Client::new()
-        .get(github_uri)
-        .header(USER_AGENT, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36")
-        .send()
+    let json: serde_json::Value = get_request_wrapper(&github_uri)
         .await?
         .json()
         .await?;
@@ -145,14 +160,11 @@ pub async fn get_star_count(remote_url: &String) -> Result<u64, Box<dyn Error>>{
 
     let uri = format!("https://api.github.com/repos/{}/{}", repo_owner, repo_name);
 
-    let json_data: serde_json::Value = reqwest::Client::new()
-        .get(uri)
-        .header(ACCEPT, "application/vnd.github+json")
-        .header(USER_AGENT, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36")
-        .send()
+    let json_data: serde_json::Value = get_request_wrapper(&uri)
         .await?
         .json()
         .await?;
+    
     let star_count: u64 = json_data.get("subscribers_count").unwrap().as_u64().unwrap();
     
     return Ok(star_count);
@@ -165,14 +177,11 @@ pub async fn get_languages(remote_url: &String) -> Result<Vec<String>, Box<dyn E
     let uri = format!("https://api.github.com/repos/{}/{}/languages", repo_owner, repo_name);
 
     // let json_data: serde_json::Value = reqwest::Client::new()
-    let json_data: serde_json::Value = reqwest::Client::new()
-        .get(uri)
-        .header(ACCEPT, "application/vnd.github+json")
-        .header(USER_AGENT, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36")
-        .send()
+    let json_data: serde_json::Value = get_request_wrapper(&uri)
         .await?
         .json()
         .await?;
+    
     let lang_array: &serde_json::Map<String, serde_json::Value> = json_data.as_object().unwrap();
     let langs: Vec<String> = lang_array.keys().cloned().collect();
     
@@ -189,14 +198,10 @@ pub async fn count_recommended_issues(remote_url: &String, recommended_issue_lab
         // TODO this doesn't handle duplicates
         let uri = format!("https://api.github.com/repos/{}/{}/issues?labels={}", repo_owner, repo_name, label);
 
-        let json_data: Vec<serde_json::Value> = reqwest::Client::new()
-            .get(uri)
-            .header(ACCEPT, "application/vnd.github+json")
-            .header(USER_AGENT, "Frieren API")
-            .send()
+        let json_data: Vec<serde_json::Value> = get_request_wrapper(&uri)
             .await?
             .json()
-            .await?;
+            .await?; 
 
         ret+=json_data.len();
     }
