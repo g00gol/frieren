@@ -2,7 +2,7 @@
 
 import os
 import sys
-import yaml
+import json
 import git
 import re
 
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     fern = {"name": re.search(r"/([^/]*/[^/]*)$","https://github.com/g00gol/frieren").group(1), "technologies": technologies, "difficulty": difficulty, "description": desc, "recommended_issue_labels": recommended_issue_labels}
 
     with open("open-source.fern", "w+") as f:
-        yaml.dump(fern, f)
+        json.dump(fern, f)
 
     fern['repo_origin'] = origin
     print(origin)
